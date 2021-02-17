@@ -23,4 +23,53 @@ test('SchemaCompiler.compile() constructs empty TypeScript classes', t => {
         'class MyClass {',
         '}'
     ]);
-});    
+});
+
+test('SchemaCompiler.compile() constructs empty TypeScript interfaces', t => {
+    const compiler = new SchemaCompiler();
+    const SCHEMA = {
+        'MyInterface': [
+            schema`interface`,
+            docs`My Interface Description`,
+            {
+            }
+        ]
+    };
+    const compiledCode = compiler.compileSchema(SCHEMA);
+    t.deepEqual(compiledCode, [
+        '/**',
+        ' * My Interface Description',
+        ' */',
+        'interface MyInterface {',
+        '}'
+    ]);
+});
+
+test('SchemaCompiler.compile() constructs an interface property', t => {
+    const compiler = new SchemaCompiler();
+    const SCHEMA = {
+        'MyInterface': [
+            schema`interface`,
+            docs`My Interface Description`,
+            {
+                'myProperty': [
+                    docs`My Property Description`,
+                    [['string'], ['number']],
+                    ['readonly', 'optional']
+                ]
+            }
+        ]
+    };
+    const compiledCode = compiler.compileSchema(SCHEMA);
+    t.deepEqual(compiledCode, [
+        '/**',
+        ' * My Interface Description',
+        ' */',
+        'interface MyInterface {',
+        '    /**',
+        '     * My Property Description',
+        '     */',
+        '    readonly myProperty?: string | number;',
+        '}'
+    ]);
+});
