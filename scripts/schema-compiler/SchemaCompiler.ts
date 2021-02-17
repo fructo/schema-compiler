@@ -5,6 +5,11 @@ export function schema(strings: TemplateStringsArray): string {
 }
 
 
+export function inherit(strings: TemplateStringsArray): string {
+    return `inherit:${strings.join('')}`;
+}
+
+
 export function docs(strings: TemplateStringsArray): string {
     return `docs:${strings.join('')}`;
 }
@@ -30,8 +35,9 @@ export class SchemaCompiler {
     private constructInterface(name: string, body: Array<unknown>): Array<string> {
         if (body[0] === 'interface') {
             const docs = this.constructDocs(body);
+            const inherit = this.construcInherit(body);
             const properties = this.constructInterfaceProperties(body);
-            return [...docs, `interface ${name} {`, ...properties, '}'];
+            return [...docs, `interface ${name} ${inherit}{`, ...properties, '}'];
         }
         return [];
     }
@@ -71,6 +77,16 @@ export class SchemaCompiler {
             types.map(intersection => intersection.join(' & ')).join(' | ')
             + ';'
         ].map(row => `${' '.repeat(4)}${row}`);
+    }
+
+    private construcInherit(body: Array<unknown>): string {
+        const ancestors = (body
+            .filter(value => typeof value === 'string') as Array<string>)
+            .filter(value => value.startsWith('inherit:'))
+            .map(row => row.replace('inherit:', ''))
+            .map(row => row.trim())
+            .join(', ');
+        return ancestors ? `extends ${ancestors} ` : '';
     }
 
 }
