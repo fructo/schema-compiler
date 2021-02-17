@@ -1,8 +1,10 @@
 'use strict';
 
-import { SchemaCompiler } from './schema-compiler/SchemaCompiler.js';
+import { docs, schema, SchemaCompiler } from './schema-compiler/SchemaCompiler.js';
 
 
 export {
+    docs,
+    schema,
     SchemaCompiler
 };
