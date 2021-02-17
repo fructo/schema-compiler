@@ -2,7 +2,7 @@
 
 import test from 'ava';
 
-import { docs, schema, SchemaCompiler } from '@fructo/schema-compiler';
+import { docs, inherit, schema, SchemaCompiler } from '@fructo/schema-compiler';
 
 
 test('SchemaCompiler.compile() constructs empty TypeScript classes', t => {
@@ -70,6 +70,26 @@ test('SchemaCompiler.compile() constructs an interface property', t => {
         '     * My Property Description',
         '     */',
         '    readonly myProperty?: string | number;',
+        '}'
+    ]);
+});
+
+test('SchemaCompiler.compile() constructs interface inheritance', t => {
+    const compiler = new SchemaCompiler();
+    const SCHEMA = {
+        'MyAncestorInterface': [
+            schema`interface`
+        ],
+        'MyInterface': [
+            schema`interface`,
+            inherit`MyAncestorInterface`
+        ]
+    };
+    const compiledCode = compiler.compileSchema(SCHEMA);
+    t.deepEqual(compiledCode, [
+        `interface MyAncestorInterface {`,
+        '}',
+        'interface MyInterface extends MyAncestorInterface {',
         '}'
     ]);
 });
