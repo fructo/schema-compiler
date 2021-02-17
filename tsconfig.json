@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "strict": true,
+        "target": "esnext",
+        "module": "es2015",
+        "moduleResolution": "node",
+        "declaration": true,
+        "sourceMap": true,
+        "outDir": "dist",
+        "baseUrl": ".",
+        "paths": {
+            "@fructo/schema-compiler": [
+                "scripts"
+            ]
+        },
+    },
+    "include": [
+        "scripts/**/*",
+        "tests/**/*"
+    ]
+}

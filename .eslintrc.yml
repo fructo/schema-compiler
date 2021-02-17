@@ -1,0 +1,21 @@
+env:
+  browser: true
+  node: true
+
+parser: "@typescript-eslint/parser"
+
+parserOptions:
+  project: "./tsconfig.json"
+
+extends:
+  - eslint:recommended
+  - plugin:@typescript-eslint/recommended
+  - plugin:@typescript-eslint/recommended-requiring-type-checking
+
+plugins:
+  - "@typescript-eslint"
+  - "eslint-plugin-tsdoc"
+
+rules:
+  tsdoc/syntax: warn
+  semi: ["error", "always"]

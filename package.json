@@ -1,0 +1,31 @@
+{
+    "private": true,
+    "name": "@fructo/schema-compiler",
+    "author": "The Fructo Authors",
+    "license": "MIT",
+    "type": "module",
+    "scripts": {
+        "build": "tsc",
+        "test": "c8 ava",
+        "lint": "eslint scripts tests"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "latest",
+        "@typescript-eslint/parser": "latest",
+        "ava": "latest",
+        "c8": "latest",
+        "eslint": "latest",
+        "eslint-plugin-tsdoc": "latest",
+        "typescript": "latest"
+    },
+    "bugs": {
+        "url": "https://github.com/fructo/fructo/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fructo/schema-compiler.git"
+    },
+    "homepage": "https://github.com/fructo/schema-compiler",
+    "types": "./dist/scripts/index.d.ts",
+    "exports": "./dist/scripts/index.js"
+}
