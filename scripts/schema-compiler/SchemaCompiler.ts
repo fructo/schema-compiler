@@ -24,16 +24,32 @@ export interface ISchema {
 
 abstract class EntityBuilder {
 
+    /**
+     * Contains a mix of entity properties and its ancestor properties.
+     */
+    public mergedProperties?: Record<string, IPropertyBody>;
+
+    public mergedPropertiesSourceCode?: Array<string>;
+
     constructor(
         protected readonly registry: BuildRegistry,
-        protected readonly entityName: string,
+        public readonly entityName: string,
         protected readonly entityBody: IEntityBody
     ) { }
 
     /**
+     * @returns TypeScript lines.
+     */
+    public build(): Array<string> {
+        this.mergedProperties = this.constructMergedProperties();
+        this.mergedPropertiesSourceCode = this.constructMergedPropertiesSourceCode();
+        return this._build();
+    }
+
+    /**
      * Constructs TypeScript lines.
      */
-    public abstract build(): Array<string>;
+    public abstract _build(): Array<string>;
 
     /**
      * Constructs documentation string.
@@ -47,6 +63,77 @@ abstract class EntityBuilder {
             ...docs.map(doc => ` * ${doc}`),
             ' */'
         ] : [];
+    }
+
+    /**
+     * Merges entity properties with ancestor properties.
+     */
+    private constructMergedProperties(): Record<string, IPropertyBody> {
+        if (this.entityBody.properties && this.entityBody.properties.constructor.name === 'Array') {
+            console.log(`WARNING: ${this.entityName} defines properties as an array, ignoring.`);
+        }
+        if (this.entityBody.properties && this.entityBody.properties.constructor.name === 'Object') {
+            let properties = this.entityBody.properties as Record<string, IPropertyBody>;
+            this.entityBody.inherits?.map(ancestorName => {
+                const ancestorEntityBuilder = this.registry.getEntityBuilder(ancestorName);
+                const ancestorProperties = ancestorEntityBuilder.mergedProperties;
+                if (ancestorProperties) {
+                    properties = this.mergeProperties(ancestorProperties, properties);
+                }
+            });
+            return properties;
+        }
+        return {};
+    }
+
+    /**
+     * Merges ancestor and its child properties.
+     * 
+     * @returns A new object with merged properties.
+     */
+    private mergeProperties(
+        ancestorProperties: Record<string, IPropertyBody>,
+        childProperties: Record<string, IPropertyBody>
+    ): Record<string, IPropertyBody> {
+        const properties: Record<string, IPropertyBody> = {};
+        Object.keys(ancestorProperties).forEach(ancestorPropertyName => {
+            const ancestorPropertyBody = ancestorProperties[ancestorPropertyName];
+            if (ancestorPropertyName in childProperties) {
+                const childPropertyBody = childProperties[ancestorPropertyName];
+                const mergedPropertyBody: IPropertyBody = {
+                    ...ancestorPropertyBody,
+                    ...childPropertyBody,
+                    keywords: [...new Set([...ancestorPropertyBody.keywords || [], ...childPropertyBody.keywords || []])],
+                };
+                properties[ancestorPropertyName] = mergedPropertyBody;
+            } else {
+                properties[ancestorPropertyName] = ancestorPropertyBody;
+            }
+        });
+        Object
+            .keys(childProperties)
+            .filter(childPropertyName => !(childPropertyName in ancestorProperties))
+            .forEach(childPropertyName => properties[childPropertyName] = childProperties[childPropertyName]);
+        return properties;
+    }
+
+    /**
+     * @returns TypeScript lines.
+     */
+    private constructMergedPropertiesSourceCode(): Array<string> {
+        return Object.entries(this.mergedProperties || {})
+            .map(([propertyName, propertyBody]) => {
+                const docs = this.constructDocs(propertyBody.docs);
+                const readonly = propertyBody.keywords?.includes('writable') ? '' : 'readonly ';
+                const optional = (propertyBody.keywords?.includes('optional')) || ('default' in propertyBody) ? '?' : '';
+                const types = (propertyBody.types?.map(intersection => intersection.join(' & ')).join(' | '))
+                    || ('default' in propertyBody ? typeof propertyBody.default : 'unknown');
+                return [
+                    ...docs,
+                    `${readonly}${propertyName}${optional}: ${types};`
+                ];
+            })
+            .flatMap(x => x);
     }
 
 }
@@ -67,6 +154,17 @@ class BuildRegistry {
     }
 
     /**
+     * Returns an entity builder by its name.
+     */
+    public getEntityBuilder(entityName: string): EntityBuilder {
+        const entityBuilder = this.entitiesBuilders.find((entityBuilder) => entityBuilder.entityName === entityName);
+        if (entityBuilder) {
+            return entityBuilder;
+        }
+        throw new TypeError(`Unable to find entity: ${entityName}`);
+    }
+
+    /**
      * Constructs TypeScript lines.
      */
     public build(): Array<string> {
@@ -83,7 +181,7 @@ class InterfaceBuilder extends EntityBuilder {
     /**
      * @override
      */
-    public build(): Array<string> {
+    public _build(): Array<string> {
         return this.constructInterfaceSourceCode();
     }
 
@@ -142,7 +240,7 @@ class ClassBuilder extends EntityBuilder {
     /**
      * @override
      */
-    public build(): Array<string> {
+    public _build(): Array<string> {
         return this.constructClassSourceCode();
     }
 
@@ -157,8 +255,55 @@ class ClassBuilder extends EntityBuilder {
         return [
             ...this.constructDocs(this.entityBody.docs),
             `export class ${this.entityName} ${inherits}{`,
+            ...this.constructPropertiesSourceCode(),
             '}'
         ];
+    }
+
+    /**
+     * Constructs all properties of a class.
+     * 
+     * @returns TypeScript lines.
+     */
+    private constructPropertiesSourceCode(): Array<string> {
+        if (this.entityBody.properties && this.entityBody.properties.constructor.name === 'Array') {
+            const typedProperties = this.entityBody.properties as Array<string>;
+            return typedProperties
+                .map(interfaceName => {
+                    const propertyName = interfaceName.split(/(?=[A-Z])/).join('_').toUpperCase();
+                    const interfaceEntityBuilder = this.registry.getEntityBuilder(interfaceName);
+                    const propertiesSourceCode = interfaceEntityBuilder.mergedPropertiesSourceCode || [];
+                    const defaultValues = Object.entries(interfaceEntityBuilder.mergedProperties || {})
+                        .filter(([, propertyBody]) => 'default' in propertyBody)
+                        .map(([propertyName, propertyBody]) => [propertyName, propertyBody.default]);
+                    const defaultValuesSourceCode = (defaultValues as Array<[string, unknown]>).map(([propertyName, defaultValue]) =>
+                        `${propertyName}: ${JSON.stringify(defaultValue)},`
+                    );
+                    const createMethodBodySourceCode = [
+                        `return {`,
+                        ...defaultValuesSourceCode.map(row => `${' '.repeat(4)}${row}`),
+                        `    ...properties`,
+                        `};`
+                    ];
+                    return [
+                        `public static readonly ${propertyName} = {`,
+                        `    create(properties: {`,
+                        ...propertiesSourceCode.map(row => `${' '.repeat(4 * 2)}${row}`),
+                        `    }): ${interfaceName} {`,
+                        ...createMethodBodySourceCode.map(row => `${' '.repeat(4 * 2)}${row}`),
+                        `    },`,
+                        `    validate(value: unknown): void {`,
+                        `        `,
+                        `    }`,
+                        `}`
+                    ].map(row => `${' '.repeat(4)}${row}`);
+                })
+                .flatMap(x => x);
+        }
+        if (this.entityBody.properties && this.entityBody.properties.constructor.name === 'Object') {
+            throw new TypeError(`Currently, a class cannot define properties as an object: ${this.entityName}.`);
+        }
+        return [];
     }
 
 }
