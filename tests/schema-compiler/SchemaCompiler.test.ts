@@ -5,6 +5,11 @@ import test from 'ava';
 import { ISchema, SchemaCompiler } from '@fructo/schema-compiler';
 
 
+function isSubset(main: Array<string>, subset: Array<string>) {
+    return main.join('').includes(subset.join(''));
+}
+
+
 test('SchemaCompiler.compile() constructs empty TypeScript classes', t => {
     const compiler = new SchemaCompiler();
     const SCHEMA: ISchema = {
@@ -16,13 +21,13 @@ test('SchemaCompiler.compile() constructs empty TypeScript classes', t => {
         }
     };
     const compiledCode = compiler.compileSchema(SCHEMA);
-    t.deepEqual(compiledCode, [
+    t.true(isSubset(compiledCode, [
         '/**',
         ' * My Class Description',
         ' */',
         'export class MyClass {',
         '}'
-    ]);
+    ]));
 });
 
 test('SchemaCompiler.compile() constructs empty TypeScript interfaces', t => {
@@ -36,13 +41,13 @@ test('SchemaCompiler.compile() constructs empty TypeScript interfaces', t => {
         }
     };
     const compiledCode = compiler.compileSchema(SCHEMA);
-    t.deepEqual(compiledCode, [
+    t.true(isSubset(compiledCode, [
         '/**',
         ' * My Interface Description',
         ' */',
         'export interface MyInterface {',
         '}'
-    ]);
+    ]));
 });
 
 test('SchemaCompiler.compile() constructs an interface property', t => {
@@ -65,7 +70,7 @@ test('SchemaCompiler.compile() constructs an interface property', t => {
         }
     };
     const compiledCode = compiler.compileSchema(SCHEMA);
-    t.deepEqual(compiledCode, [
+    t.true(isSubset(compiledCode, [
         '/**',
         ' * My Interface Description',
         ' */',
@@ -75,7 +80,7 @@ test('SchemaCompiler.compile() constructs an interface property', t => {
         '     */',
         '    readonly myProperty?: string | number;',
         '}'
-    ]);
+    ]));
 });
 
 test('SchemaCompiler.compile() constructs interface inheritance', t => {
@@ -90,10 +95,10 @@ test('SchemaCompiler.compile() constructs interface inheritance', t => {
         }
     };
     const compiledCode = compiler.compileSchema(SCHEMA);
-    t.deepEqual(compiledCode, [
+    t.true(isSubset(compiledCode, [
         `export interface MyAncestorInterface {`,
         '}',
         'export interface MyInterface extends MyAncestorInterface {',
         '}'
-    ]);
+    ]));
 });
