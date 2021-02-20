@@ -4,7 +4,7 @@
         "coverage",
         "**/tests/**",
         "**/*.d.ts",
-        "**/{I,T}*"
+        "**/I[A-Z]*"
     ],
     "reporter": [
         "lcov",
