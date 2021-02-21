@@ -1,4 +1,4 @@
-name: Node.js CI
+name: ci
 
 on:
   push:
@@ -12,6 +12,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Use Deno
+        uses: denolib/setup-deno@v2
+        with:
+          deno-version: "v1.x"
 
       - name: Use Node.js
         uses: actions/setup-node@v1
