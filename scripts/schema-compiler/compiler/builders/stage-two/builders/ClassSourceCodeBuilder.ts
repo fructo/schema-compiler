@@ -1,6 +1,6 @@
 'use strict';
 
-import { IPropertyBody } from 'scripts/schema-compiler/schema/IPropertyBody.js';
+import { IPropertyBody } from '../../../schema/IPropertyBody.js';
 import { SourceCodeBuilder } from './SourceCodeBuilder.js';
 
 
