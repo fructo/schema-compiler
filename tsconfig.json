@@ -22,6 +22,7 @@
     },
     "include": [
         "scripts/**/*",
-        "tests/**/*"
+        "tests/**/*",
+        "deno.d.ts"
     ]
 }
