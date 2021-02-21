@@ -7,7 +7,7 @@ import * as module from '@fructo/schema-compiler';
 
 function testModuleExports() {
     const EXPORTS = [
-        'SchemaCompilerTool',
+        'SchemaCompilerCore',
     ];
     EXPORTS.forEach(unit => {
         test(`The module exports ${unit}`, t => {

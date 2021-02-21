@@ -2,7 +2,7 @@
 
 import test from 'ava';
 
-import { ISchema, SchemaCompilerTool } from '@fructo/schema-compiler';
+import { ISchema, SchemaCompilerCore } from '@fructo/schema-compiler';
 
 
 function isSubset(main: Array<string>, subset: Array<string>) {
@@ -10,8 +10,8 @@ function isSubset(main: Array<string>, subset: Array<string>) {
 }
 
 
-test('SchemaCompilerTool.compileSchema() constructs empty TypeScript classes', t => {
-    const compiler = new SchemaCompilerTool();
+test('SchemaCompilerCore.compileSchema() constructs empty TypeScript classes', t => {
+    const compiler = new SchemaCompilerCore();
     const SCHEMA: ISchema = {
         MyClass: {
             types: ['class'],
@@ -30,8 +30,8 @@ test('SchemaCompilerTool.compileSchema() constructs empty TypeScript classes', t
     ]));
 });
 
-test('SchemaCompilerTool.compileSchema() constructs empty TypeScript interfaces', t => {
-    const compiler = new SchemaCompilerTool();
+test('SchemaCompilerCore.compileSchema() constructs empty TypeScript interfaces', t => {
+    const compiler = new SchemaCompilerCore();
     const SCHEMA: ISchema = {
         MyInterface: {
             types: ['interface'],
@@ -50,8 +50,8 @@ test('SchemaCompilerTool.compileSchema() constructs empty TypeScript interfaces'
     ]));
 });
 
-test('SchemaCompilerTool.compileSchema() constructs an interface property', t => {
-    const compiler = new SchemaCompilerTool();
+test('SchemaCompilerCore.compileSchema() constructs an interface property', t => {
+    const compiler = new SchemaCompilerCore();
     const SCHEMA: ISchema = {
         MyInterface: {
             types: ['interface'],
@@ -83,8 +83,8 @@ test('SchemaCompilerTool.compileSchema() constructs an interface property', t =>
     ]));
 });
 
-test('SchemaCompilerTool.compileSchema() constructs interface inheritance', t => {
-    const compiler = new SchemaCompilerTool();
+test('SchemaCompilerCore.compileSchema() constructs interface inheritance', t => {
+    const compiler = new SchemaCompilerCore();
     const SCHEMA: ISchema = {
         MyAncestorInterface: {
             types: ['interface']
