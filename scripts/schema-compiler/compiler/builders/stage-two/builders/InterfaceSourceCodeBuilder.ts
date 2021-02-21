@@ -50,7 +50,7 @@ export class InterfaceSourceCodeBuilder extends SourceCodeBuilder {
                     return [
                         ...docs,
                         `${readonly}${propertyName}${optional}: ${types};`
-                    ].map(row => `${' '.repeat(4)}${row}`);
+                    ];
                 })
                 .flatMap(x => x);
         }

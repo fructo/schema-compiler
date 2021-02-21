@@ -49,7 +49,7 @@ export class ClassSourceCodeBuilder extends SourceCodeBuilder {
                         `        `,
                         `    }`,
                         `}`
-                    ].map(row => `${' '.repeat(4)}${row}`);
+                    ];
                 })
                 .flatMap(x => x);
         }
@@ -70,7 +70,7 @@ export class ClassSourceCodeBuilder extends SourceCodeBuilder {
             `return {`,
             ...lines,
             `};`
-        ].map(row => `${' '.repeat(4 * 2)}${row}`);
+        ];
     }
 
     /**
