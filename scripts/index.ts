@@ -1,10 +1,10 @@
 'use strict';
 
-import { ISchema } from './schema-compiler/compiler/schema/ISchema.js';
-import { SchemaCompilerTool } from './schema-compiler/SchemaCompilerTool.js';
+import { ISchema } from './schema-compiler-core/compiler/schema/ISchema.js';
+import { SchemaCompilerCore } from './schema-compiler-core/SchemaCompilerCore.js';
 
 
 export {
     ISchema,
-    SchemaCompilerTool
+    SchemaCompilerCore
 };

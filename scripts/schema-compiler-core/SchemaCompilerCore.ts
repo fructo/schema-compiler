@@ -5,7 +5,7 @@ import { SchemaCompiler } from './compiler/SchemaCompiler.js';
 import { SourceCodeFormatter } from './formatter/SourceCodeFormatter.js';
 
 
-export class SchemaCompilerTool {
+export class SchemaCompilerCore {
 
     private readonly compiler = new SchemaCompiler();
     private readonly formatter = new SourceCodeFormatter();
