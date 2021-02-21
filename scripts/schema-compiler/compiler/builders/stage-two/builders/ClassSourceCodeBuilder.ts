@@ -38,25 +38,48 @@ export class ClassSourceCodeBuilder extends SourceCodeBuilder {
         if (this.entityBody.properties && this.entityBody.properties.constructor.name === 'Array') {
             const typedProperties = this.entityBody.properties as Array<string>;
             return typedProperties
-                .map(interfaceName => {
-                    const propertyName = interfaceName.split(/(?=[A-Z])/).join('_').toUpperCase();
-                    return [
-                        `public static readonly ${propertyName} = {`,
-                        `    create(properties: ${interfaceName}Merged): ${interfaceName} {`,
-                        ...this.constructCreationMethodBodySourceCode(interfaceName),
-                        `    },`,
-                        `    validate(value: unknown): void {`,
-                        `        `,
-                        `    }`,
-                        `}`
-                    ];
-                })
+                .map(interfaceName => this.constructInterfaceBasedPropertySourceCode(interfaceName, interfaceName))
                 .flatMap(x => x);
         }
         if (this.entityBody.properties && this.entityBody.properties.constructor.name === 'Object') {
-            throw new TypeError(`Currently, a class cannot define properties as an object: ${this.entityName}.`);
+            const typedProperties = this.entityBody.properties as Record<string, IPropertyBody>;
+            return Object.entries(typedProperties)
+                .map(([rawPropertyName, propertyBody]) => {
+                    const propertyName = rawPropertyName.split(/(?=[A-Z])/).join('_').toUpperCase();
+                    const types = (propertyBody.types?.map(intersection => intersection.join(' & ')).join(' | ')) || 'unknown';
+                    return this.registry.hasStageTwoBuilder(types)
+                        ? this.constructInterfaceBasedPropertySourceCode(rawPropertyName, types)
+                        : [
+                            `public static readonly ${propertyName} = {`,
+                            `    create(value: ${types}): ${types} {`,
+                            `        return value;`,
+                            `    },`,
+                            `    validate(value: unknown): void {`,
+                            `        `,
+                            `    }`,
+                            `}`
+                        ];
+                })
+                .flatMap(x => x);
         }
         return [];
+    }
+
+    /**
+     * @returns TypeScript lines.
+     */
+    private constructInterfaceBasedPropertySourceCode(rawPropertyName: string, interfaceName: string): Array<string> {
+        const propertyName = rawPropertyName.split(/(?=[A-Z])/).join('_').toUpperCase();
+        return [
+            `public static readonly ${propertyName} = {`,
+            `    create(properties: ${interfaceName}Merged): ${interfaceName} {`,
+            ...this.constructCreationMethodBodySourceCode(interfaceName),
+            `    },`,
+            `    validate(value: unknown): void {`,
+            `        `,
+            `    }`,
+            `}`
+        ];
     }
 
     /**
