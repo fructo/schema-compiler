@@ -3,7 +3,7 @@
 
 import { exec } from 'child_process';
 
-const DENO = 'deno run --allow-read';
+const DENO = 'deno run --allow-read --allow-write';
 const TOOL_PATH = './dist/scripts/schema-compiler-deno/SchemaCompilerTool.js';
 
 const args = process.argv.slice(2).join(' ');
