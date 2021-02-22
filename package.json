@@ -4,6 +4,9 @@
     "author": "The Fructo Authors",
     "license": "MIT",
     "type": "module",
+    "bin": {
+        "fsc": "./bin/fsc.js"
+    },
     "scripts": {
         "postinstall": "deno types > deno.d.ts",
         "build": "tsc",
