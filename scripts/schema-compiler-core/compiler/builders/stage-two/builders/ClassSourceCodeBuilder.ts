@@ -167,8 +167,8 @@ export class ClassSourceCodeBuilder extends SourceCodeBuilder {
                 const nestedLines = this.mergePropertiesForCreationMethodSourceCode(nestedKeySet, nestedDefaultProperties, [...keysPath, key]);
                 lines.push(...nestedLines, '}');
             } else {
-                const defaultValue = JSON.stringify(defaultProperties[key]);
-                const line = `${key}: ${`properties${keysPath.length > 0 ? '.' : ''}${keysPath.join('.')}.${key}`} || ${defaultValue},`;
+                const defaultValue = key in defaultProperties ? ` || ${JSON.stringify(defaultProperties[key])}` : '';
+                const line = `${key}: ${`properties${keysPath.length > 0 ? '.' : ''}${keysPath.join('.')}.${key}`}${defaultValue},`;
                 lines.push(line);
             }
         }
