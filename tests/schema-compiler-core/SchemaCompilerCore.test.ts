@@ -97,7 +97,9 @@ test('SchemaCompilerCore.compileSchema() constructs interface inheritance', t =>
     const compiledCode = compiler.compileSchema(SCHEMA);
     t.true(isSubset(compiledCode, [
         `export interface MyAncestorInterface {`,
-        '}',
+        '}'
+    ]));
+    t.true(isSubset(compiledCode, [
         'export interface MyInterface extends MyAncestorInterface {',
         '}'
     ]));
