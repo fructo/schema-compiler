@@ -1,6 +1,6 @@
 'use strict';
 
-import { ISchema } from '../../schema-compiler-core/compiler/schema/ISchema.js';
+import { ISchema } from '../../schema-compiler-core/schema/ISchema.js';
 
 
 export class SchemaFileReader {
