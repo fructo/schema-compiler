@@ -17,7 +17,8 @@ export abstract class MergedInterfacesEntitiesFactory {
      * - Rename original name (create a name for a merged interface).
      * - Rename nested properties (make references to merged interfaces).
      * - Inject properties from ancestors.
-     * - TODO: Make a property optional if a default value exists.
+     * - Make a property optional if a default value exists.
+     * - Remove ancestors to avoid conflicts because of optional values.
      * 
      * @param compilationRegistry - The compilation registry. Used to register a new merged interface.
      * @param originalEntityName - A name of an original entity for which a new merged interface should be created.
@@ -32,6 +33,8 @@ export abstract class MergedInterfacesEntitiesFactory {
             const mergedInterfaceName = this.createMergedInterfaceName(originalEntityName);
             this.renameNestedProperties(compilationRegistry, originalEntityBodyDeepMutable);
             this.injectPropertiesFromAncestors(compilationRegistry, originalEntityBodyDeepMutable);
+            this.makePropertiesWithDefaultValueOptional(originalEntityBodyDeepMutable);
+            this.removeAncestors(originalEntityBodyDeepMutable);
             compilationRegistry.registerEntitySilently(mergedInterfaceName, originalEntityBodyDeepMutable);
         }
     }
@@ -120,6 +123,33 @@ export abstract class MergedInterfacesEntitiesFactory {
                 typedChildProperties[ancestorPropertyName] = ancestorPropertyBody;
             }
         });
+    }
+
+    /**
+     * If a property has a default value, it should be marked as optional.
+     * 
+     * @param mergedInterfaceEntityBody - Body of a merged interface entity. The body will be modified.
+     */
+    private static makePropertiesWithDefaultValueOptional({ properties }: TDeepMutable<IEntityBody>) {
+        if (properties?.constructor.name === 'Object') {
+            const typedProperties = properties as TDeepMutable<Record<string, IPropertyBody>>;
+            Object.values(typedProperties).forEach(propertyBody => {
+                if ('default' in propertyBody) {
+                    propertyBody.keywords = [...propertyBody.keywords || [], 'optional'];
+                }
+            });
+        } else {
+            console.log(`WARNING: MERGE: DEFAULTS: An entity defines properties not as an object, ignoring.`);
+        }
+    }
+
+    /**
+     * Remove ancestors to avoid conflicts because of optional values.
+     * 
+     * @param mergedInterfaceEntityBody - Body of a merged interface entity. The body will be modified.
+     */
+    private static removeAncestors(mergedInterfaceEntityBody: TDeepMutable<IEntityBody>) {
+        mergedInterfaceEntityBody.inherits = undefined;
     }
 
 }
