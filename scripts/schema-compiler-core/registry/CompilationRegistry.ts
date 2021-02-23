@@ -35,20 +35,7 @@ type TEventListener<T extends TEventName> =
     : never;
 
 
-/**
- * Argument for {@link CompilationRegistryEventsManager.dispatchEvent}.
- */
-type TEvent<T extends TEventName> =
-    T extends 'register-entity' | 'register-entity-silently' ? {
-        originalEntityName: string,
-        originalEntityBodyDeepMutable: TDeepMutable<IEntityBody>
-    } : T extends 'register-output-code-lines' ? {
-        originalEntityName: string,
-        outputCodeLines: Array<string>
-    } : never;
-
-
-abstract class CompilationRegistryEventsManager {
+export class CompilationRegistry {
 
     /**
      * Listeners of registry events.
@@ -63,50 +50,6 @@ abstract class CompilationRegistryEventsManager {
         listeners.push(listener);
         this.listeners.set(eventName, listeners);
     }
-
-    /**
-     * Passes an event to the listeners.
-     * 
-     * @throws An error if the event name is unknown.
-     */
-    protected dispatchEvent<T extends TEventName>(
-        eventName: T,
-        event: TEvent<T>
-    ): void {
-        const listeners = this.listeners.get(eventName);
-        if (listeners) {
-            if (['register-entity', 'register-entity-silently'].includes(eventName)) {
-                const typedEvent = event as TEvent<'register-entity'>;
-                listeners.forEach(listener => {
-                    const typedListener = listener as TEventListener<'register-entity'>;
-                    typedListener(
-                        this as unknown as CompilationRegistry,
-                        typedEvent.originalEntityName,
-                        typedEvent.originalEntityBodyDeepMutable
-                    );
-                });
-            } else if (['register-output-code-lines'].includes(eventName)) {
-                const typedEvent = event as TEvent<'register-output-code-lines'>;
-                listeners.forEach(listener => {
-                    const typedListener = listener as TEventListener<'register-output-code-lines'>;
-                    typedListener(
-                        this as unknown as CompilationRegistry,
-                        typedEvent.originalEntityName,
-                        typedEvent.outputCodeLines
-                    );
-                });
-            } else {
-                throw new TypeError(`CRITICAL: REGISTRY: Event ${eventName} is unknown.`);
-            }
-        } else {
-            console.log(`WARNING: REGISTRY: Event ${eventName} does not have a listener.`);
-        }
-    }
-
-}
-
-
-export class CompilationRegistry extends CompilationRegistryEventsManager {
 
     /**
      * Registered entities.
@@ -140,15 +83,16 @@ export class CompilationRegistry extends CompilationRegistryEventsManager {
      * 
      * @throws An error if the entity is already registered.
      */
-    private _registerEntity(eventName: TEventName, entityName: string, entityBody: IEntityBody): void {
+    private _registerEntity(
+        eventName: 'register-entity' | 'register-entity-silently',
+        entityName: string, entityBody: IEntityBody
+    ): void {
         if (this.hasEntity(entityName)) {
             throw new TypeError(`CRITICAL: REGISTRY: ${entityName} is already registered.`);
         }
         this.entities.set(entityName, entityBody);
-        this.dispatchEvent(eventName, {
-            originalEntityName: entityName,
-            originalEntityBodyDeepMutable: this.getEntityBody(entityName)
-        });
+        const listeners = <Array<TEventListener<'register-entity'>>>this.listeners.get(eventName);
+        listeners.forEach(listener => listener(this, entityName, this.getEntityBody(entityName)));
     }
 
     /**
@@ -174,10 +118,8 @@ export class CompilationRegistry extends CompilationRegistryEventsManager {
      * Dispatches an event ('register-output-code-lines').
      */
     public registerOutputCodeLines(entityName: string, outputCodeLines: Array<string>): void {
-        this.dispatchEvent('register-output-code-lines', {
-            originalEntityName: entityName,
-            outputCodeLines
-        });
+        const listeners = <Array<TEventListener<'register-output-code-lines'>>>this.listeners.get('register-output-code-lines');
+        listeners.forEach(listener => listener(this, entityName, outputCodeLines));
     }
 
 }
