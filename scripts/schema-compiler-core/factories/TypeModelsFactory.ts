@@ -2,6 +2,7 @@
 
 import { TTypeModelSchema, TypeModel } from '../models/TypeModel.js';
 import { CompilationRegistry } from '../registry/CompilationRegistry.js';
+import { TypeUtil } from '../utils/TypeUtil.js';
 
 
 export class TypeModelsFactory {
@@ -17,15 +18,17 @@ export class TypeModelsFactory {
      * @param modelName - Model name.
      * @param modelSchema - Model schema.
      */
-    public fromModelSchema(modelName: string, modelSchema: TTypeModelSchema): TypeModel | undefined {
+    public fromModelSchema(modelName: string, modelSchema: TTypeModelSchema | unknown): TypeModel | undefined {
         if (this.checkNamingConventionOfTypeName(modelName)) {
-            const ancestorsNames = (modelSchema.ancestors || '').split(',').map(name => name.trim());
+            this.checkSchemaSyntax(modelName, modelSchema);
+            const typedModelSchema = modelSchema as TTypeModelSchema;
+            const ancestorsNames = (typedModelSchema.ancestors || '').split(',').filter(s => s).map(name => name.trim());
             const ancestors = ancestorsNames.map(ancestorName => this.registry.getModel<TypeModel>(ancestorName));
             const model = new TypeModel({
                 name: modelName,
-                description: modelSchema.description,
-                rule: modelSchema.rule,
-                type: modelSchema.type,
+                description: typedModelSchema.description,
+                rule: typedModelSchema.rule,
+                type: typedModelSchema.type,
                 ancestors
             });
             this.registry.registerModel(model);
@@ -41,6 +44,20 @@ export class TypeModelsFactory {
      */
     private checkNamingConventionOfTypeName(modelName: string): boolean {
         return /^T[A-Z]/.test(modelName);
+    }
+
+    private checkSchemaSyntax(modelName: string, modelSchema: unknown) {
+        if (TypeUtil.isDictionary(modelSchema)) {
+            const dict = modelSchema as Record<string, unknown>;
+            if ((!dict.ancestors || typeof dict.ancestors === 'string')
+                && (typeof dict.description === 'string')
+                && (typeof dict.rule === 'string')
+                && (typeof dict.type === 'string')
+            ) {
+                return;
+            }
+        }
+        throw new SyntaxError(`${modelName} does not match the schema.`);
     }
 
 }

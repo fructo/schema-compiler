@@ -46,7 +46,7 @@ export abstract class LanguageStructureModelsFactory<
      * @returns Undefined if the name does not match the naming convention, otherwise a new model.
      * @throws An error if the syntax is wrong.
      */
-    public fromModelSchema(modelName: string, modelSchema: ModelSchema): Model | undefined {
+    public fromModelSchema(modelName: string, modelSchema: ModelSchema | unknown): Model | undefined {
         if (this.checkNamingConventionOfLanguageStructureName(modelName)) {
             if (TypeUtil.isArray(modelSchema)) {
                 return this.fromModelArraySchema(modelName, modelSchema as ModelArraySchema);
@@ -100,7 +100,7 @@ export abstract class LanguageStructureModelsFactory<
      * @returns New model.
      */
     private fromModelObjectSchema(modelName: string, modelSchema: ModelDictionarySchema): Model {
-        const ancestorsNames = (modelSchema.ancestors || '').split(',').map(name => name.trim());
+        const ancestorsNames = (modelSchema.ancestors || '').split(',').filter(s => s).map(name => name.trim());
         const ancestors = ancestorsNames.map(ancestorName => this.registry.getModel(ancestorName));
         const rawProperties = modelSchema.properties || [];
         if (TypeUtil.isArray(rawProperties)) {
