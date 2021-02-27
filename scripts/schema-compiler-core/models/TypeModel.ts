@@ -1,5 +1,8 @@
 'use strict';
 
+import { IRegistrableModel } from '../registry/IRegistrableModel.js';
+
+
 export type TTypeModelSchema = {
 
     /**
@@ -44,12 +47,17 @@ export type TTypeModelSchema = {
      * 'TString, TNumber'
      * ```
      */
-    readonly ancestors: string;
+    readonly ancestors?: string;
 
 };
 
 
-export class TypeModel {
+export class TypeModel implements IRegistrableModel {
+
+    /**
+     * @override
+     */
+    public readonly name: string;
 
     /**
      * @see {@link TTypeModelSchema.description}
@@ -72,7 +80,11 @@ export class TypeModel {
      */
     public readonly ancestors: Array<TypeModel>;
 
-    constructor({ description, rule, type, ancestors }: {
+    constructor({ name, description, rule, type, ancestors }: {
+        /**
+         * @see {@link TypeModel.name}
+         */
+        name: string,
         /**
          * @see {@link TypeModel.description}
          */
@@ -90,6 +102,7 @@ export class TypeModel {
          */
         ancestors: Array<TypeModel>
     }) {
+        this.name = name;
         this.description = description;
         this.rule = rule;
         this.type = type;

@@ -1,6 +1,7 @@
 'use strict';
 
 import { IEntityBody } from '../schema/IEntityBody.js';
+import { IRegistrableModel } from './IRegistrableModel.js';
 
 
 /**
@@ -35,7 +36,49 @@ type TEventListener<T extends TEventName> =
     : never;
 
 
-export class CompilationRegistry {
+class NewCompilationRegistry {
+
+    /**
+     * Registered models.
+     * Key: model name
+     * Value: model
+     */
+    private readonly models = new Map<string, IRegistrableModel>();
+
+    /**
+     * Registers a model.
+     * 
+     * @param model - A model to be registered.
+     */
+    public registerModel(model: IRegistrableModel): void {
+        this.models.set(model.name, model);
+    }
+
+    /**
+     * Checks if a specified model exists in the registry.
+     */
+    public hasModel(modelName: string): boolean {
+        return this.models.has(modelName);
+    }
+
+    /**
+     * Returns a model from the registry.
+     * 
+     * @param modelName - A name of a model to seek for.
+     * @throws An error if the model does not exist.
+     */
+    public getModel<T extends IRegistrableModel>(modelName: string): T {
+        const model = this.models.get(modelName);
+        if (model) {
+            return <T>model;
+        }
+        throw new TypeError(`${modelName} does not exist.`);
+    }
+
+}
+
+
+export class CompilationRegistry extends NewCompilationRegistry {
 
     /**
      * Listeners of registry events.

@@ -1,6 +1,7 @@
 'use strict';
 
 import { PropertyModel, TPropertyModelDictionarySchema } from './PropertyModel.js';
+import { IRegistrableModel } from '../registry/IRegistrableModel.js';
 
 
 /**
@@ -72,10 +73,12 @@ export type TLanguageStructurePropertiesModelDictionarySchema = Record<string, T
 /**
  * Language structures are Interfaces and Classes.
  */
-export abstract class LanguageStructureModel {
+export abstract class LanguageStructureModel implements IRegistrableModel {
 
     /**
      * Name of a structure.
+     * 
+     * @override
      */
     public readonly name: string;
 

@@ -14,10 +14,18 @@ class Node<T> {
 
 export class BinaryExpressionTree {
 
-    private readonly rootNode: Node<string>;
+    constructor(
+        private readonly rootNode: Node<unknown>
+    ) { }
 
-    constructor(expression: string) {
-        this.rootNode = BinaryExpressionTree.createExpressionTree(expression);
+    public static fromExpression(expression: string): BinaryExpressionTree {
+        const rootNode = this.createExpressionTree(expression);
+        return new BinaryExpressionTree(rootNode);
+    }
+
+    public static fromValue(value: unknown): BinaryExpressionTree {
+        const rootNode = new Node(value);
+        return new BinaryExpressionTree(rootNode);
     }
 
     /**
@@ -108,6 +116,23 @@ export class BinaryExpressionTree {
             }
         }
         return operatorIndex ? [scope.slice(0, operatorIndex).trim(), scope.slice(operatorIndex + 1).trim()] : undefined;
+    }
+
+    public mapValues(mapFunction: (value: unknown) => unknown): BinaryExpressionTree {
+        this.mapValuesRecursively(this.rootNode, mapFunction);
+        return this;
+    }
+
+    private mapValuesRecursively(node: Node<unknown>, mapFunction: (value: unknown) => unknown) {
+        if (node.leftNode) {
+            this.mapValuesRecursively(node.leftNode, mapFunction);
+        }
+        if (node.rightNode) {
+            this.mapValuesRecursively(node.rightNode, mapFunction);
+        }
+        if (node.value !== '&' && node.value !== '|') {
+            node.value = mapFunction(node.value);
+        }
     }
 
 }
