@@ -75,7 +75,7 @@ export class BinaryExpressionTree {
             andNode.leftNode = this.createExpressionTree(leftScope);
             return andNode;
         }
-        const valueNode = new Node(expression.trim());
+        const valueNode = new Node(expression.replace(/[()]/g, '').trim());
         return valueNode;
     }
 
