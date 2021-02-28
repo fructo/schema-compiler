@@ -71,7 +71,7 @@ export class MergedInterfaceModelsFactory {
         return properties.filter(property => {
             const isDuplicate = knownNames.has(property.name);
             knownNames.add(property.name);
-            return isDuplicate;
+            return !isDuplicate;
         });
     }
 
