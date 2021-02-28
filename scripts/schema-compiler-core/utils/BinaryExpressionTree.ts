@@ -135,4 +135,15 @@ export class BinaryExpressionTree {
         }
     }
 
+    public toString(valueConverter: (value: unknown) => string): string {
+        return this.toStringRecursively(this.rootNode, valueConverter);
+    }
+
+    private toStringRecursively(node: Node<unknown>, valueConverter: (value: unknown) => string): string {
+        const leftValue = node.leftNode ? this.toStringRecursively(node.leftNode, valueConverter) : '';
+        const rightValue = node.rightNode ? this.toStringRecursively(node.rightNode, valueConverter) : '';
+        const value = (node.value === '&' || node.value === '|') ? node.value : valueConverter(node.value);
+        return leftValue && rightValue ? `(${leftValue} ${value} ${rightValue})` : value;
+    }
+
 }

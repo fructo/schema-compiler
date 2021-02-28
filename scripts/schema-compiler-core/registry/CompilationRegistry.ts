@@ -14,6 +14,8 @@ export type TDeepMutable<T> = { -readonly [K in keyof T]: TDeepMutable<T[K]> };
  * Events that can dispath the compilation registry.
  */
 type TEventName =
+    'register-model' |
+    'register-model-silently' |
     'register-entity' |
     'register-entity-silently' |
     'register-output-code-lines';
@@ -33,10 +35,27 @@ type TEventListener<T extends TEventName> =
         originalEntityName: string,
         outputCodeLines: Array<string>
     ) => void
+    : T extends 'register-model' | 'register-model-silently' ? (
+        model: IRegistrableModel
+    ) => void
     : never;
 
 
 class NewCompilationRegistry {
+
+    /**
+     * Listeners of registry events.
+     */
+    protected readonly listeners = new Map<TEventName, Array<TEventListener<TEventName>>>();
+
+    /**
+     * Attaches a listener to the registry.
+     */
+    public on<T extends TEventName>(eventName: T, listener: TEventListener<T>): void {
+        const listeners = this.listeners.get(eventName) || [];
+        listeners.push(listener);
+        this.listeners.set(eventName, listeners);
+    }
 
     /**
      * Registered models.
@@ -47,11 +66,30 @@ class NewCompilationRegistry {
 
     /**
      * Registers a model.
+     * Dispatches an event ('register-model').
      * 
      * @param model - A model to be registered.
      */
     public registerModel(model: IRegistrableModel): void {
+        this._registerModel('register-model', model);
+    }
+
+    /**
+     * Performs the registation of a model.
+     * Dispatches a specified event.
+     * 
+     * @throws An error if the model is already registered.
+     */
+    private _registerModel(
+        eventName: 'register-model' | 'register-model-silently',
+        model: IRegistrableModel
+    ): void {
+        if (this.hasModel(model.name)) {
+            throw new TypeError(`CRITICAL: REGISTRY: ${model.name} is already registered.`);
+        }
         this.models.set(model.name, model);
+        const listeners = <Array<TEventListener<'register-model'>>>this.listeners.get(eventName);
+        listeners.forEach(listener => listener(model));
     }
 
     /**
@@ -83,7 +121,7 @@ export class CompilationRegistry extends NewCompilationRegistry {
     /**
      * Listeners of registry events.
      */
-    private readonly listeners = new Map<TEventName, Array<TEventListener<TEventName>>>();
+    protected readonly listeners = new Map<TEventName, Array<TEventListener<TEventName>>>();
 
     /**
      * Attaches a listener to the registry.
