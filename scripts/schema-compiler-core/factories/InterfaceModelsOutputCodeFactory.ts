@@ -4,6 +4,7 @@ import { InterfaceModel } from '../models/InterfaceModel.js';
 import { PropertyModel } from '../models/PropertyModel.js';
 import { TypeModel } from '../models/TypeModel.js';
 import { CompilationRegistry } from '../registry/CompilationRegistry.js';
+import { IRegistrableModel } from '../registry/IRegistrableModel.js';
 
 
 export class InterfaceModelsOutputCodeLinesFactory {
@@ -12,11 +13,18 @@ export class InterfaceModelsOutputCodeLinesFactory {
         private readonly registry: CompilationRegistry
     ) {
         this.registry.on('register-model', (model) => {
-            if (model instanceof InterfaceModel) {
-                const outputLines = this.createOutputCodeLines(model);
-                this.registry.registerOutputCodeLines(model.name, outputLines);
-            }
+            this.processModel(model);
         });
+        this.registry.on('register-model-silently', (model) => {
+            this.processModel(model);
+        });
+    }
+
+    private processModel(model: IRegistrableModel): void {
+        if (model instanceof InterfaceModel) {
+            const outputLines = this.createOutputCodeLines(model);
+            this.registry.registerOutputCodeLines(model.name, outputLines);
+        }
     }
 
     private createOutputCodeLines(model: InterfaceModel): Array<string> {

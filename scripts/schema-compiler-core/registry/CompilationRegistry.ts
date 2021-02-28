@@ -75,6 +75,16 @@ class NewCompilationRegistry {
     }
 
     /**
+     * Silently registers a model.
+     * Dispatches an event ('register-model-silently').
+     * 
+     * @param model - A model to be registered.
+     */
+    public registerModelSilently(model: IRegistrableModel): void {
+        this._registerModel('register-model-silently', model);
+    }
+
+    /**
      * Performs the registation of a model.
      * Dispatches a specified event.
      * 

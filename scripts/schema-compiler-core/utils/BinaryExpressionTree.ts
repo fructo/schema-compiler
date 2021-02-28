@@ -146,4 +146,18 @@ export class BinaryExpressionTree {
         return leftValue && rightValue ? `(${leftValue} ${value} ${rightValue})` : value;
     }
 
+    public clone(): BinaryExpressionTree {
+        const rootNode = this.cloneRecutsively(this.rootNode);
+        return new BinaryExpressionTree(rootNode);
+    }
+
+    public cloneRecutsively(node: Node<unknown>): Node<unknown> {
+        const leftNode = node.leftNode ? this.cloneRecutsively(node.leftNode) : undefined;
+        const rightNode = node.rightNode ? this.cloneRecutsively(node.rightNode) : undefined;
+        const copy = new Node(node.value);
+        copy.leftNode = leftNode;
+        copy.rightNode = rightNode;
+        return copy;
+    }
+
 }

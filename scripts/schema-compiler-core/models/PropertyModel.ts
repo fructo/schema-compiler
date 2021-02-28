@@ -126,4 +126,15 @@ export class PropertyModel {
         this.defaultValue = defaultValue;
     }
 
+    public clone(): PropertyModel {
+        return new PropertyModel({
+            name: this.name,
+            type: this.type.clone(),
+            hasConstantValue: this.hasConstantValue,
+            hasDefaultValue: this.hasDefaultValue,
+            constantValue: this.constantValue,
+            defaultValue: this.defaultValue
+        });
+    }
+
 }
