@@ -19,10 +19,10 @@ export type TPropertyModelDictionarySchema = {
     readonly default?: unknown;
 
     /**
-     * Property type can be represented by a string or a dicrionary.
+     * Property type can be represented by a string.
      * The string can contain names of language structures separated by the logic operators (&, |, (, )).
      */
-    readonly type?: string | Record<string, TPropertyModelDictionarySchema>;
+    readonly type?: string;
 
 };
 
@@ -39,7 +39,7 @@ export class PropertyModel {
 
     /**
      * A binary expression tree.
-     * The tree can contain language structure models, type models, property models.
+     * The tree can contain language structure models, type models.
      */
     public readonly type: BinaryExpressionTree;
 

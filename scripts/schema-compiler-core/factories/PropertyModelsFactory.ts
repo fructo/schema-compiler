@@ -3,7 +3,6 @@
 import { PropertyModel, TPropertyModelDictionarySchema } from '../models/PropertyModel.js';
 import { CompilationRegistry } from '../registry/CompilationRegistry.js';
 import { BinaryExpressionTree } from '../utils/BinaryExpressionTree.js';
-import { TypeUtil } from '../utils/TypeUtil.js';
 
 
 export class PropertyModelsFactory {
@@ -29,7 +28,7 @@ export class PropertyModelsFactory {
      * Creates a property model from a schema.
      * 
      * @param propertyName - Name of a property.
-     * @param propertySchema - Schema of a property (dictionary). Can contain nested dictionaries.
+     * @param propertySchema - Schema of a property (dictionary).
      */
     public fromPropertyModelDictionarySchema(propertyName: string, propertySchema: TPropertyModelDictionarySchema): PropertyModel {
         if (typeof propertySchema.type === 'string') {
@@ -40,12 +39,6 @@ export class PropertyModelsFactory {
                 hasDefaultValue: 'default' in propertySchema,
                 constantValue: propertySchema.constant,
                 defaultValue: propertySchema.default
-            });
-        }
-        if (TypeUtil.isDictionary(propertySchema.type)) {
-            return new PropertyModel({
-                name: propertyName,
-                type: BinaryExpressionTree.fromValue(this.fromPropertyModelDictionarySchema('', propertySchema.type as TPropertyModelDictionarySchema))
             });
         }
         throw new SyntaxError();
