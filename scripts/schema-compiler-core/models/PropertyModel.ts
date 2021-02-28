@@ -6,23 +6,48 @@ import { BinaryExpressionTree } from '../utils/BinaryExpressionTree.js';
 /**
  * The properties of a language structure can be represented as a dictionary.
  */
-export type TPropertyModelDictionarySchema = {
+export type TPropertyModelDictionarySchema = TPropertyModelConstantSchema | TPropertyModelStandartSchema | TPropertyModelAnonymousInterfaceSchema;
+
+
+/**
+ * If a property is constant, its value will be used as a type.
+ */
+export type TPropertyModelConstantSchema = {
 
     /**
      * Holds a constant value of a property.
      */
     readonly constant?: unknown;
 
+}
+
+
+export type TPropertyModelStandartSchema = {
+
+    /**
+     * Property type can be represented by a string.
+     * The string can contain names of language structures (and type models) separated by the logic operators (&, |, (, )).
+     */
+    readonly type?: string;
+
     /**
      * Holds a default value of a property.
      */
     readonly default?: unknown;
 
+}
+
+
+export type TPropertyModelAnonymousInterfaceSchema = {
+
+    readonly ancestors?: string;
+
+    readonly properties?: TPropertyModelDictionarySchema;
+
     /**
-     * Property type can be represented by a string.
-     * The string can contain names of language structures separated by the logic operators (&, |, (, )).
+     * Holds a default value of a property.
      */
-    readonly type?: string;
+    readonly default?: unknown;
 
 };
 
@@ -33,9 +58,9 @@ export type TPropertyModelDictionarySchema = {
 export class PropertyModel {
 
     /**
-     * Property name. Optional because nested properties do not have a name.
+     * Property name.
      */
-    public readonly name?: string;
+    public readonly name: string;
 
     /**
      * A binary expression tree.
@@ -71,7 +96,7 @@ export class PropertyModel {
         /**
          * @see {@link PropertyModel.name}
          */
-        name?: string,
+        name: string,
         /**
          * @see {@link PropertyModel."type"}
          */
