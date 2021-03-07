@@ -3,6 +3,7 @@
 import { InterfaceModel } from '../models/InterfaceModel.js';
 import { PropertyModel } from '../models/PropertyModel.js';
 import { TypeModel } from '../models/TypeModel.js';
+import { ValueModel } from '../models/ValueModel.js';
 import { CompilationRegistry } from '../registry/CompilationRegistry.js';
 import { IRegistrableModel } from '../registry/IRegistrableModel.js';
 
@@ -47,15 +48,15 @@ export class InterfaceModelsOutputCodeLinesFactory {
     }
 
     private createPropertyType(propertyModel: PropertyModel): string {
-        if (propertyModel.hasConstantValue) {
-            return JSON.stringify(propertyModel.constantValue);
-        }
         const type = propertyModel.type.toString((value) => {
             if (value instanceof TypeModel) {
                 return value.type;
             }
             if (value instanceof InterfaceModel) {
                 return value.name;
+            }
+            if (value instanceof ValueModel) {
+                return value.toString();
             }
             return JSON.stringify(value);
         });

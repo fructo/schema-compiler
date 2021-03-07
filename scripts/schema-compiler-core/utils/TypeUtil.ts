@@ -23,4 +23,13 @@ export abstract class TypeUtil {
         return typeof obj === 'object' && obj !== null && obj.constructor.name === 'Object';
     }
 
+    /**
+     * Returns true if an object is a string.
+     * 
+     * @param obj - An object to be checked.
+     */
+    public static isString(obj: unknown): boolean {
+        return typeof obj === 'string';
+    }
+
 }

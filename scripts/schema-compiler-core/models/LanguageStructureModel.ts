@@ -1,6 +1,6 @@
 'use strict';
 
-import { PropertyModel, TPropertyModelDictionarySchema } from './PropertyModel.js';
+import { PropertyModel, TPropertyModelSchema } from './PropertyModel.js';
 import { IRegistrableModel } from '../registry/IRegistrableModel.js';
 
 
@@ -67,7 +67,7 @@ export type TLanguageStructurePropertiesModelArraySchema = Array<string>;
  * In that case, a key of the dictionary is a name of a property.
  * The name is allowed to not match the naming convention.
  */
-export type TLanguageStructurePropertiesModelDictionarySchema = Record<string, TPropertyModelDictionarySchema>;
+export type TLanguageStructurePropertiesModelDictionarySchema = Record<string, TPropertyModelSchema>;
 
 
 /**

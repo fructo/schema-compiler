@@ -1,53 +1,32 @@
 'use strict';
 
+import { IRegistrableModel } from '../registry/IRegistrableModel.js';
 import { BinaryExpressionTree } from '../utils/BinaryExpressionTree.js';
+import { ValueModel } from './ValueModel.js';
+
+
+export type TPropertyModelSchema = TPropertyModelExpressionSchema | TPropertyModelAnonymousInterfaceSchema;
 
 
 /**
- * The properties of a language structure can be represented as a dictionary.
+ * A property type can be represented by an expression.
+ * An expression can contain names of language structures, type model names, primitive values.
+ * All values must be separated by a logic operator (&, |, (, )).
+ * 
+ * @example
+ * ```ts
+ * "'my-constant-string'"
+ * "TString | 'my-default-string'"
+ * ```
  */
-export type TPropertyModelDictionarySchema = TPropertyModelConstantSchema | TPropertyModelStandartSchema | TPropertyModelAnonymousInterfaceSchema;
-
-
-/**
- * If a property is constant, its value will be used as a type.
- */
-export type TPropertyModelConstantSchema = {
-
-    /**
-     * Holds a constant value of a property.
-     */
-    readonly constant?: unknown;
-
-}
-
-
-export type TPropertyModelStandartSchema = {
-
-    /**
-     * Property type can be represented by a string.
-     * The string can contain names of language structures (and type models) separated by the logic operators (&, |, (, )).
-     */
-    readonly type?: string;
-
-    /**
-     * Holds a default value of a property.
-     */
-    readonly default?: unknown;
-
-}
+export type TPropertyModelExpressionSchema = string;
 
 
 export type TPropertyModelAnonymousInterfaceSchema = {
 
     readonly ancestors?: string;
 
-    readonly properties?: TPropertyModelDictionarySchema;
-
-    /**
-     * Holds a default value of a property.
-     */
-    readonly default?: unknown;
+    readonly properties?: Record<string, TPropertyModelSchema>;
 
 };
 
@@ -64,35 +43,11 @@ export class PropertyModel {
 
     /**
      * A binary expression tree.
-     * The tree can contain language structure models, type models.
+     * The tree can contain language structure models, type models, value models.
      */
-    public readonly type: BinaryExpressionTree;
+    public readonly type: BinaryExpressionTree<IRegistrableModel | ValueModel>;
 
-    /**
-     * Equals to True if a property has a constant value.
-     * Do not try to use the constant without this check first because undefined can be the constant.
-     */
-    public readonly hasConstantValue: boolean;
-
-    /**
-     * Equals to True if a property has a default value.
-     * Do not try to use the default without this check first because undefined can be the default.
-     */
-    public readonly hasDefaultValue: boolean;
-
-    /**
-     * A constant value of a property.
-     * Use {@link PropertyModel.hasConstantValue} first.
-     */
-    public readonly constantValue: unknown;
-
-    /**
-     * A constant value of a property.
-     * Use {@link PropertyModel.hasDefaultValue} first.
-     */
-    public readonly defaultValue: unknown;
-
-    constructor({ name, type, hasConstantValue = false, hasDefaultValue = false, constantValue, defaultValue }: {
+    constructor({ name, type }: {
         /**
          * @see {@link PropertyModel.name}
          */
@@ -100,40 +55,16 @@ export class PropertyModel {
         /**
          * @see {@link PropertyModel."type"}
          */
-        type: BinaryExpressionTree,
-        /**
-         * @see {@link PropertyModel.hasConstantValue}
-         */
-        hasConstantValue?: boolean,
-        /**
-         * @see {@link PropertyModel.hasDefaultValue}
-         */
-        hasDefaultValue?: boolean,
-        /**
-         * @see {@link PropertyModel.constantValue}
-         */
-        constantValue?: unknown,
-        /**
-         * @see {@link PropertyModel.defaultValue}
-         */
-        defaultValue?: unknown;
+        type: BinaryExpressionTree<IRegistrableModel | ValueModel>
     }) {
         this.name = name;
         this.type = type;
-        this.hasConstantValue = hasConstantValue;
-        this.hasDefaultValue = hasDefaultValue;
-        this.constantValue = constantValue;
-        this.defaultValue = defaultValue;
     }
 
     public clone(): PropertyModel {
         return new PropertyModel({
             name: this.name,
-            type: this.type.clone(),
-            hasConstantValue: this.hasConstantValue,
-            hasDefaultValue: this.hasDefaultValue,
-            constantValue: this.constantValue,
-            defaultValue: this.defaultValue
+            type: this.type.clone()
         });
     }
 

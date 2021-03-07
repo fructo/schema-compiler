@@ -115,7 +115,7 @@ export abstract class LanguageStructureModelsFactory<
         }
         if (TypeUtil.isDictionary(rawProperties)) {
             const properties = Object.entries(rawProperties).map(([propertyName, propertyModelObjectSchema]) => {
-                return this.propertyModelsFactory.fromPropertyModelDictionarySchema(propertyName, propertyModelObjectSchema);
+                return this.propertyModelsFactory.fromPropertyModelSchema(propertyName, propertyModelObjectSchema);
             });
             const model = new this.modelClass({ name: modelName, ancestors, properties });
             this.registry.registerModel(model);
