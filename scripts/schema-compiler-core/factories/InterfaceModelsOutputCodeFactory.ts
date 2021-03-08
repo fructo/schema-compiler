@@ -2,10 +2,9 @@
 
 import { InterfaceModel } from '../models/InterfaceModel.js';
 import { PropertyModel } from '../models/PropertyModel.js';
-import { TypeModel } from '../models/TypeModel.js';
-import { ValueModel } from '../models/ValueModel.js';
 import { CompilationRegistry } from '../registry/CompilationRegistry.js';
 import { IRegistrableModel } from '../registry/IRegistrableModel.js';
+import { BinaryExpressionTree } from '../utils/BinaryExpressionTree.js';
 
 
 export class InterfaceModelsOutputCodeLinesFactory {
@@ -32,35 +31,24 @@ export class InterfaceModelsOutputCodeLinesFactory {
         const ancestorsAsString = model.ancestors.map(ancestor => ancestor.name).join(', ');
         return [
             `export interface ${model.name} ${ancestorsAsString ? `extends ${ancestorsAsString} ` : ''}{`,
-            ...this.createPropertiesOutputLines(model),
+            ...this.createPropertiesOutputLines(model.properties),
             `}`
         ];
     }
 
-    private createPropertiesOutputLines(model: InterfaceModel): Array<string> {
-        return model.properties
+    private createPropertiesOutputLines(properties: Array<PropertyModel>): Array<string> {
+        return properties
             .map(propertyModel => {
                 return [
-                    `${propertyModel.name}: ${this.createPropertyType(propertyModel)};`,
+                    ...propertyModel.type instanceof BinaryExpressionTree
+                        ? [`${propertyModel.name}: ${propertyModel.type.toString()};`]
+                        : [`${propertyModel.name}: {`,
+                        ...this.createPropertiesOutputLines(propertyModel.type),
+                            `};`
+                        ]
                 ];
             })
             .flatMap(x => x);
-    }
-
-    private createPropertyType(propertyModel: PropertyModel): string {
-        const type = propertyModel.type.toString((value) => {
-            if (value instanceof TypeModel) {
-                return value.type;
-            }
-            if (value instanceof InterfaceModel) {
-                return value.name;
-            }
-            if (value instanceof ValueModel) {
-                return value.toString();
-            }
-            return JSON.stringify(value);
-        });
-        return type;
     }
 
 }

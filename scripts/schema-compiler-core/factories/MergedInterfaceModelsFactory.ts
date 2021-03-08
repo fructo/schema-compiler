@@ -3,6 +3,8 @@
 import { InterfaceModel } from '../models/InterfaceModel.js';
 import { PropertyModel } from '../models/PropertyModel.js';
 import { CompilationRegistry } from '../registry/CompilationRegistry.js';
+import { BinaryExpressionTree } from '../utils/BinaryExpressionTree.js';
+import { TMutable } from '../utils/TypeUtil.js';
 
 
 /**
@@ -28,6 +30,10 @@ export class MergedInterfaceModelsFactory {
         });
     }
 
+    public static createMergedInterfaceName(interfaceName: string): string {
+        return `${interfaceName}MergedInterface`;
+    }
+
     private createMergedInterfaceModel(originalModel: InterfaceModel): InterfaceModel {
         return new InterfaceModel({
             name: this.createMergedInterfaceName(originalModel),
@@ -36,7 +42,7 @@ export class MergedInterfaceModelsFactory {
     }
 
     private createMergedInterfaceName(originalModel: InterfaceModel): string {
-        return `${originalModel.name}MergedInterface`;
+        return MergedInterfaceModelsFactory.createMergedInterfaceName(originalModel.name);
     }
 
     private createMergedPropertiesModels(originalModel: InterfaceModel): Array<PropertyModel> {
@@ -54,16 +60,22 @@ export class MergedInterfaceModelsFactory {
     }
 
     private createPropertiesWithReferencesToMergedInterfaces(originalProperties: Array<PropertyModel>): Array<PropertyModel> {
-        const clonedProperties = originalProperties.map(property => property.clone());
-        clonedProperties.map(property => property.type.mapValues((value) => {
-            if (value instanceof InterfaceModel) {
-                const mergedModelName = this.createMergedInterfaceName(value);
-                const mergedModel = this.registry.getModel(mergedModelName);
-                return mergedModel;
+        const clonedProperties: Array<TMutable<PropertyModel>> = originalProperties.map(property => property.clone());
+        return clonedProperties.map(property => {
+            if (property.type instanceof BinaryExpressionTree) {
+                property.type = property.type.map(value => {
+                    if (value instanceof InterfaceModel) {
+                        const mergedModelName = this.createMergedInterfaceName(value);
+                        const mergedModel = this.registry.getModel(mergedModelName);
+                        return mergedModel;
+                    }
+                    return value;
+                });
+            } else {
+                property.type = this.createPropertiesWithReferencesToMergedInterfaces(property.type);
             }
-            return value;
-        }));
-        return clonedProperties;
+            return property;
+        });
     }
 
     private resolveDuplicates(properties: Array<PropertyModel>): Array<PropertyModel> {

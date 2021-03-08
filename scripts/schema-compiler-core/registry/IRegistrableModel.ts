@@ -1,6 +1,9 @@
 'use strict';
 
-export interface IRegistrableModel {
+import { ITreeElement } from '../utils/BinaryExpressionTree.js';
+
+
+export interface IRegistrableModel extends ITreeElement {
 
     /**
      * Model name.

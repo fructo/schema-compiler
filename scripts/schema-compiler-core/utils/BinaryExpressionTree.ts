@@ -1,5 +1,14 @@
 'use strict';
 
+export interface ITreeElement {
+
+    toString(): string;
+
+    clone(): ITreeElement;
+
+}
+
+
 class Node<T> {
 
     public leftNode?: Node<T>;
@@ -12,18 +21,53 @@ class Node<T> {
 }
 
 
-export class BinaryExpressionTree<T> {
+abstract class Operator implements ITreeElement {
 
-    constructor(
-        private readonly rootNode: Node<T | string>
-    ) { }
+    public static readonly CHARACTER: string;
 
-    public static fromExpression<T>(expression: string, valueMapper: (value: string) => T): BinaryExpressionTree<T> {
-        const rootNode = this.createExpressionTree(expression, valueMapper);
-        return new BinaryExpressionTree<T>(rootNode);
+    /**
+     * @override
+     */
+    public clone(): Operator {
+        return new (this.constructor as { new(): Operator });
     }
 
-    public static fromValue<T>(value: T): BinaryExpressionTree<T> {
+    /**
+     * @override
+     */
+    public toString(): string {
+        return (this.constructor as unknown as { CHARACTER: string }).CHARACTER;
+    }
+
+}
+
+
+class AndOperator extends Operator {
+
+    public static readonly CHARACTER = '&';
+
+}
+
+
+class OrOperator extends Operator {
+
+    public static readonly CHARACTER = '|';
+
+}
+
+
+export class BinaryExpressionTree<T extends ITreeElement> {
+
+    constructor(
+        private readonly rootNode: Node<T>
+    ) { }
+
+    public static fromExpression<T extends ITreeElement>(expression: string, valueMapper: (value: string) => T): BinaryExpressionTree<T> {
+        const rootNode = this.createExpressionTree(expression, valueMapper);
+        return new BinaryExpressionTree(rootNode) as BinaryExpressionTree<T>;
+    }
+
+    public static fromValue<T extends ITreeElement>(value: T): BinaryExpressionTree<T> {
         const rootNode = new Node(value);
         return new BinaryExpressionTree(rootNode);
     }
@@ -58,19 +102,19 @@ export class BinaryExpressionTree<T> {
      *     A   B
      * ```
      */
-    private static createExpressionTree<T>(expression: string, valueMapper: (value: string) => T): Node<T | string> {
-        let scopes = this.findLastSpecificOperatorInScope('|', expression);
+    private static createExpressionTree<T extends ITreeElement>(expression: string, valueMapper: (value: string) => T): Node<T | Operator> {
+        let scopes = this.findLastSpecificOperatorInScope(OrOperator.CHARACTER, expression);
         if (scopes) {
             const [rightScope, leftScope] = scopes;
-            const orNode = new Node<T | string>('|');
+            const orNode = new Node(new OrOperator());
             orNode.rightNode = this.createExpressionTree(rightScope, valueMapper);
             orNode.leftNode = this.createExpressionTree(leftScope, valueMapper);
             return orNode;
         }
-        scopes = this.findLastSpecificOperatorInScope('&', expression);
+        scopes = this.findLastSpecificOperatorInScope(AndOperator.CHARACTER, expression);
         if (scopes) {
             const [rightScope, leftScope] = scopes;
-            const andNode = new Node<T | string>('&');
+            const andNode = new Node(new AndOperator());
             andNode.rightNode = this.createExpressionTree(rightScope, valueMapper);
             andNode.leftNode = this.createExpressionTree(leftScope, valueMapper);
             return andNode;
@@ -120,9 +164,13 @@ export class BinaryExpressionTree<T> {
         return operatorIndex ? [scope.slice(0, operatorIndex).trim(), scope.slice(operatorIndex + 1).trim()] : undefined;
     }
 
-    public mapValues<V>(mapFunction: (value: T) => V): BinaryExpressionTree<V | string> {
-        this.mapValuesRecursively(this.rootNode, mapFunction);
-        return this as unknown as BinaryExpressionTree<V | string>;
+    /**
+     * @override
+     */
+    public map<V extends ITreeElement>(mapFunction: (value: T) => V): BinaryExpressionTree<V> {
+        const clonedTree = this.clone();
+        this.mapValuesRecursively(clonedTree.rootNode, mapFunction);
+        return clonedTree as unknown as BinaryExpressionTree<V>;
     }
 
     private mapValuesRecursively<V>(node: Node<V | T | string>, mapFunction: (value: T) => V): void {
@@ -132,31 +180,37 @@ export class BinaryExpressionTree<T> {
         if (node.rightNode) {
             this.mapValuesRecursively(node.rightNode, mapFunction);
         }
-        if (node.value !== '&' && node.value !== '|') {
+        if (node.value !== AndOperator.CHARACTER && node.value !== OrOperator.CHARACTER) {
             node.value = mapFunction(node.value as T);
         }
     }
 
-    public toString(valueConverter: (value: unknown) => string): string {
-        return this.toStringRecursively(this.rootNode, valueConverter);
+    /**
+     * @override
+     */
+    public toString(): string {
+        return this.toStringRecursively(this.rootNode);
     }
 
-    private toStringRecursively(node: Node<unknown>, valueConverter: (value: unknown) => string): string {
-        const leftValue = node.leftNode ? this.toStringRecursively(node.leftNode, valueConverter) : '';
-        const rightValue = node.rightNode ? this.toStringRecursively(node.rightNode, valueConverter) : '';
-        const value = (node.value === '&' || node.value === '|') ? node.value : valueConverter(node.value);
+    public toStringRecursively(node: Node<T>): string {
+        const leftValue = node.leftNode ? this.toStringRecursively(node.leftNode) : '';
+        const rightValue = node.rightNode ? this.toStringRecursively(node.rightNode) : '';
+        const value = node.value.toString();
         return leftValue && rightValue ? `(${leftValue} ${value} ${rightValue})` : value;
     }
 
+    /**
+     * @override
+     */
     public clone(): BinaryExpressionTree<T> {
         const rootNode = this.cloneRecursively(this.rootNode);
         return new BinaryExpressionTree(rootNode);
     }
 
-    public cloneRecursively(node: Node<T | string>): Node<T | string> {
+    public cloneRecursively(node: Node<T>): Node<T> {
         const leftNode = node.leftNode ? this.cloneRecursively(node.leftNode) : undefined;
         const rightNode = node.rightNode ? this.cloneRecursively(node.rightNode) : undefined;
-        const copy = new Node(node.value);
+        const copy = new Node(node.value.clone() as T);
         copy.leftNode = leftNode;
         copy.rightNode = rightNode;
         return copy;

@@ -2,7 +2,7 @@
 
 import {
     PropertyModel,
-    TPropertyModelAnonymousInterfaceSchema,
+    TPropertyModelDictionarySchema,
     TPropertyModelSchema,
     TPropertyModelExpressionSchema
 } from '../models/PropertyModel.js';
@@ -11,18 +11,13 @@ import { CompilationRegistry } from '../registry/CompilationRegistry.js';
 import { IRegistrableModel } from '../registry/IRegistrableModel.js';
 import { BinaryExpressionTree } from '../utils/BinaryExpressionTree.js';
 import { TypeUtil } from '../utils/TypeUtil.js';
-import { AnonymousInterfaceModelsFactory } from './AnonymoysInterfaceModelFactory.js';
 
 
 export class PropertyModelsFactory {
 
-    private readonly anonymousInterfaceModelsFactory: AnonymousInterfaceModelsFactory;
-
     constructor(
         private readonly registry: CompilationRegistry
-    ) {
-        this.anonymousInterfaceModelsFactory = new AnonymousInterfaceModelsFactory(registry, this);
-    }
+    ) { }
 
     /**
      * Creates a property model from a model of a language structure.
@@ -45,13 +40,11 @@ export class PropertyModelsFactory {
      */
     public fromPropertyModelSchema(propertyName: string, propertySchema: TPropertyModelSchema): PropertyModel {
         if (TypeUtil.isDictionary(propertySchema)) {
-            if ('properties' in (propertySchema as TPropertyModelAnonymousInterfaceSchema)) {
-                const model = this.anonymousInterfaceModelsFactory.fromModelSchema(propertySchema);
-                return new PropertyModel({
-                    name: propertyName,
-                    type: BinaryExpressionTree.fromValue(model)
-                });
-            }
+            return new PropertyModel({
+                name: propertyName,
+                type: Object.entries(propertySchema as TPropertyModelDictionarySchema)
+                    .map(([name, schema]) => this.fromPropertyModelSchema(name, schema))
+            });
         }
         if (TypeUtil.isString(propertySchema)) {
             return new PropertyModel({

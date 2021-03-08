@@ -109,4 +109,33 @@ export class TypeModel implements IRegistrableModel {
         this.ancestors = ancestors;
     }
 
+    /**
+     * @override
+     */
+    public toString(): string {
+        return this.name;
+    }
+
+    /**
+     * @override
+     */
+    public clone(): TypeModel {
+        const typedConstructor = this.constructor as {
+            new(args: {
+                name: string,
+                description: string,
+                rule: string,
+                type: string,
+                ancestors: Array<TypeModel>
+            }): TypeModel
+        };
+        return new typedConstructor({
+            name: this.name,
+            description: this.description,
+            rule: this.rule,
+            type: this.type,
+            ancestors: this.ancestors.map(ancestor => ancestor.clone())
+        });
+    }
+
 }

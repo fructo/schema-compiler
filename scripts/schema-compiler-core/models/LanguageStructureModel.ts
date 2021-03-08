@@ -111,4 +111,29 @@ export abstract class LanguageStructureModel implements IRegistrableModel {
         this.properties = properties || [];
     }
 
+    /**
+     * @override
+     */
+    public toString(): string {
+        return this.name;
+    }
+
+    /**
+     * @override
+     */
+    public clone(): LanguageStructureModel {
+        const typedConstructor = this.constructor as {
+            new(args: {
+                name: string,
+                ancestors: Array<LanguageStructureModel>,
+                properties: Array<PropertyModel>
+            }): LanguageStructureModel
+        };
+        return new typedConstructor({
+            name: this.name,
+            ancestors: this.ancestors.map(ancestor => ancestor.clone()),
+            properties: this.properties.map(property => property.clone())
+        });
+    }
+
 }

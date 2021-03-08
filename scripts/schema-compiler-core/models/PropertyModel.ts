@@ -5,7 +5,7 @@ import { BinaryExpressionTree } from '../utils/BinaryExpressionTree.js';
 import { ValueModel } from './ValueModel.js';
 
 
-export type TPropertyModelSchema = TPropertyModelExpressionSchema | TPropertyModelAnonymousInterfaceSchema;
+export type TPropertyModelSchema = TPropertyModelExpressionSchema | TPropertyModelDictionarySchema;
 
 
 /**
@@ -22,13 +22,12 @@ export type TPropertyModelSchema = TPropertyModelExpressionSchema | TPropertyMod
 export type TPropertyModelExpressionSchema = string;
 
 
-export type TPropertyModelAnonymousInterfaceSchema = {
-
-    readonly ancestors?: string;
-
-    readonly properties?: Record<string, TPropertyModelSchema>;
-
+export type TPropertyModelDictionarySchema = {
+    [propertyName: string]: TPropertyModelSchema
 };
+
+
+export type TPropertyType = Array<PropertyModel> | BinaryExpressionTree<IRegistrableModel | ValueModel>;
 
 
 /**
@@ -42,10 +41,10 @@ export class PropertyModel {
     public readonly name: string;
 
     /**
-     * A binary expression tree.
+     * A binary expression tree or an array of properties.
      * The tree can contain language structure models, type models, value models.
      */
-    public readonly type: BinaryExpressionTree<IRegistrableModel | ValueModel>;
+    public readonly type: TPropertyType;
 
     constructor({ name, type }: {
         /**
@@ -55,7 +54,7 @@ export class PropertyModel {
         /**
          * @see {@link PropertyModel."type"}
          */
-        type: BinaryExpressionTree<IRegistrableModel | ValueModel>
+        type: TPropertyType;
     }) {
         this.name = name;
         this.type = type;
@@ -64,7 +63,9 @@ export class PropertyModel {
     public clone(): PropertyModel {
         return new PropertyModel({
             name: this.name,
-            type: this.type.clone()
+            type: this.type instanceof BinaryExpressionTree
+                ? this.type.clone()
+                : this.type.map(property => property.clone())
         });
     }
 

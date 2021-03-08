@@ -1,5 +1,8 @@
 'use strict';
 
+export type TMutable<T> = { -readonly [P in keyof T]: T[P] };
+
+
 /**
  * @sealed
  */
