@@ -173,14 +173,14 @@ export class BinaryExpressionTree<T extends ITreeElement> {
         return clonedTree as unknown as BinaryExpressionTree<V>;
     }
 
-    private mapValuesRecursively<V>(node: Node<V | T | string>, mapFunction: (value: T) => V): void {
+    private mapValuesRecursively<V>(node: Node<V | T>, mapFunction: (value: T) => V): void {
         if (node.leftNode) {
             this.mapValuesRecursively(node.leftNode, mapFunction);
         }
         if (node.rightNode) {
             this.mapValuesRecursively(node.rightNode, mapFunction);
         }
-        if (node.value !== AndOperator.CHARACTER && node.value !== OrOperator.CHARACTER) {
+        if (!(node.value instanceof Operator)) {
             node.value = mapFunction(node.value as T);
         }
     }
