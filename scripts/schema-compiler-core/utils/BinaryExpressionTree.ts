@@ -186,6 +186,47 @@ export class BinaryExpressionTree<T extends ITreeElement> {
     }
 
     /**
+     * @example
+     * ```txt
+     *      AND
+     *     /  \
+     *    OR   C
+     *   / \
+     *  A   B
+     * 
+     * First iteration: [A, B]
+     * Second iteration: [C]
+     * Third iteration: [A, B] AND [C] = [AC, BC]
+     * ```
+     */
+    public toDisjunctiveArray(conjunction: (leftElement: T, rightElement: T) => T): Array<T> {
+        return this.toDisjunctiveArrayRecursively(this.rootNode, conjunction);
+    }
+
+    private toDisjunctiveArrayRecursively(
+        node: Node<T>,
+        conjunction: (leftElement: T, rightElement: T) => T
+    ): Array<T> {
+        const leftArray = node.leftNode ? this.toDisjunctiveArrayRecursively(node.leftNode, conjunction) : [];
+        const rightArray = node.rightNode ? this.toDisjunctiveArrayRecursively(node.rightNode, conjunction) : [];
+        if (node.value instanceof AndOperator) {
+            if (leftArray.length >= rightArray.length) {
+                return leftArray
+                    .map(leftValue => rightArray.map(rightValue => conjunction(leftValue, rightValue)))
+                    .flatMap(x => x);
+            } else {
+                return rightArray
+                    .map(rightValue => leftArray.map(leftValue => conjunction(leftValue, rightValue)))
+                    .flatMap(x => x);
+            }
+        }
+        if (node.value instanceof OrOperator) {
+            return [...leftArray, ...rightArray];
+        }
+        return [node.value];
+    }
+
+    /**
      * @override
      */
     public toString(): string {
