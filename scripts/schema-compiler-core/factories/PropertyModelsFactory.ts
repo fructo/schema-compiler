@@ -59,7 +59,7 @@ export class PropertyModelsFactory {
                 type: BinaryExpressionTree.fromExpression(propertySchema as TPropertyModelExpressionSchema, (valueAsString) => {
                     if (/^'.*'$/.test(valueAsString)) {
                         // string
-                        return new ValueModel({ value: valueAsString.replace(/^'(.*)'$/, '$1') });
+                        return new ValueModel({ value: valueAsString.replace(/^'(.*)'$/, "'$1'") });
                     }
                     if (/^\d+$/.test(valueAsString)) {
                         // integer
