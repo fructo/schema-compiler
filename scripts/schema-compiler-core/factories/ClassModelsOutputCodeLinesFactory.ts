@@ -133,12 +133,39 @@ export class ClassModelsOutputCodeLinesFactory {
     private createDisjunctiveArray(typeTree: BinaryExpressionTree<IRegistrableModel | ValueModel>): Array<IRegistrableModel | ValueModel> {
         const disjunctiveArray = typeTree.toDisjunctiveArray((leftElement, rightElement) => {
             if (leftElement instanceof InterfaceModel && rightElement instanceof InterfaceModel) {
-                new InterfaceModel({
+                return new InterfaceModel({
                     name: `${leftElement.name}+${rightElement.name}`,
                     properties: this.filterUniqueProperties([...leftElement.properties, ...rightElement.properties])
                 });
             }
-            throw new TypeError('Conjunction only works for interfaces.');
+            if (leftElement instanceof TypeModel && rightElement instanceof TypeModel) {
+                if (leftElement.name === rightElement.name) {
+                    return leftElement;
+                }
+                if (leftElement.type === rightElement.type) {
+                    return new TypeModel({
+                        name: `${leftElement.name}+${rightElement.name}`,
+                        description: `${leftElement.description}+${rightElement.description}}`,
+                        rule: `${leftElement.rule} && ${rightElement.rule}`,
+                        type: leftElement.type,
+                        ancestors: [...new Set([...leftElement.ancestors, ...rightElement.ancestors]).values()]
+                    });
+                }
+            }
+            if (leftElement instanceof ValueModel && rightElement instanceof ValueModel) {
+                if (leftElement.value === rightElement.value) {
+                    return leftElement;
+                }
+            }
+            if (leftElement instanceof ValueModel && rightElement instanceof TypeModel || leftElement instanceof TypeModel && rightElement instanceof ValueModel) {
+                const valueModel = [leftElement, rightElement].find(element => element instanceof ValueModel) as ValueModel;
+                const typeModel = [leftElement, rightElement].find(element => element instanceof TypeModel) as TypeModel;
+                const evalFunction = new Function(`"use strict";return ${typeModel.rule};`.replace('value', valueModel.toString()));
+                if (evalFunction()) {
+                    return valueModel;
+                }
+            }
+            throw new TypeError(`Illegal conjunction of ${leftElement.toString()} and ${rightElement.toString()}`);
         });
         return disjunctiveArray;
     }
