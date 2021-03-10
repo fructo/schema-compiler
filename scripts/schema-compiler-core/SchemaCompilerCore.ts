@@ -8,6 +8,7 @@ import { PropertyModelsFactory } from './factories/PropertyModelsFactory.js';
 import { InterfaceModelsFactory } from './factories/InterfaceModelsFactory.js';
 import { ClassModelsFactory } from './factories/ClassModelsFactory.js';
 import { InterfaceModelsOutputCodeLinesFactory } from './factories/InterfaceModelsOutputCodeFactory.js';
+import { ClassModelsOutputCodeLinesFactory } from './factories/ClassModelsOutputCodeLinesFactory.js';
 
 
 export class SchemaCompilerCore {
@@ -19,6 +20,7 @@ export class SchemaCompilerCore {
         registry.on('register-output-code-lines', (lines) => console.log(lines));
         registry.on('register-output-code-lines', (lines) => outputLines.push(...lines));
         new InterfaceModelsOutputCodeLinesFactory(registry);
+        new ClassModelsOutputCodeLinesFactory(registry);
         const typesModelsFactory = new TypeModelsFactory(registry);
         const propertiesModelsFactory = new PropertyModelsFactory(registry);
         const interfacesModelsFactory = new InterfaceModelsFactory(registry, propertiesModelsFactory);
