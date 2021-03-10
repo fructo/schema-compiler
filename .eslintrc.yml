@@ -19,3 +19,4 @@ plugins:
 rules:
   tsdoc/syntax: warn
   semi: ["error", "always"]
+  "@typescript-eslint/no-implied-eval": warn
