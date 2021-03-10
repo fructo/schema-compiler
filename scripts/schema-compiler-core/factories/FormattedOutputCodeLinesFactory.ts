@@ -1,13 +1,8 @@
 'use strict';
 
-import { CompilationRegistry } from '../registry/CompilationRegistry.js';
-
-
 export class FormattedOutputCodeLinesFactory {
 
     public static createFormattedOutputCodeLines(
-        compilationRegistry: CompilationRegistry,
-        originalEntityName: string,
         outputCodeLines: Array<string>
     ): void {
         this.addIndents(outputCodeLines);

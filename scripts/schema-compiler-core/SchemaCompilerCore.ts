@@ -1,29 +1,34 @@
 'use strict';
 
-import { ISchema } from './schema/ISchema.js';
 import { CompilationRegistry } from './registry/CompilationRegistry.js';
-import { MergedInterfacesEntitiesFactory } from './factories/MergedInterfacesEntitiesFactory.js';
-import { InterfacesOutputCodeLinesFactory } from './factories/InterfacesOutputCodeLinesFactory.js';
-import { ClassesOutputCodeLinesFactory } from './factories/ClassesOutputCodeLinesFactory.js';
 import { FormattedOutputCodeLinesFactory } from './factories/FormattedOutputCodeLinesFactory.js';
+
+import { TypeModelsFactory } from './factories/TypeModelsFactory.js';
+import { PropertyModelsFactory } from './factories/PropertyModelsFactory.js';
+import { InterfaceModelsFactory } from './factories/InterfaceModelsFactory.js';
+import { ClassModelsFactory } from './factories/ClassModelsFactory.js';
+import { InterfaceModelsOutputCodeLinesFactory } from './factories/InterfaceModelsOutputCodeFactory.js';
 
 
 export class SchemaCompilerCore {
 
-    public compileSchema(schema: ISchema): Array<string> {
-        const lines: Array<string> = [];
-        const compilationRegitry = new CompilationRegistry();
-        compilationRegitry.on('register-entity', (...args) => MergedInterfacesEntitiesFactory.createMergedInterfaceEntity(...args));
-        compilationRegitry.on('register-entity', (...args) => InterfacesOutputCodeLinesFactory.createInterfaceOutputCodeLines(...args));
-        compilationRegitry.on('register-entity', (...args) => ClassesOutputCodeLinesFactory.createClassOutputCodeLines(...args));
-        compilationRegitry.on('register-entity-silently', (...args) => InterfacesOutputCodeLinesFactory.createInterfaceOutputCodeLines(...args));
-        compilationRegitry.on('register-entity-silently', (...args) => ClassesOutputCodeLinesFactory.createClassOutputCodeLines(...args));
-        compilationRegitry.on('register-output-code-lines', (...args) => FormattedOutputCodeLinesFactory.createFormattedOutputCodeLines(...args));
-        compilationRegitry.on('register-output-code-lines', (_, __, outputCodeLines) => {
-            lines.push(...outputCodeLines);
+    public compileSchema(schema: Record<string, unknown>): Array<string> {
+        const outputLines: Array<string> = [];
+        const registry = new CompilationRegistry();
+        registry.on('register-output-code-lines', (lines) => FormattedOutputCodeLinesFactory.createFormattedOutputCodeLines(lines));
+        registry.on('register-output-code-lines', (lines) => console.log(lines));
+        registry.on('register-output-code-lines', (lines) => outputLines.push(...lines));
+        new InterfaceModelsOutputCodeLinesFactory(registry);
+        const typesModelsFactory = new TypeModelsFactory(registry);
+        const propertiesModelsFactory = new PropertyModelsFactory(registry);
+        const interfacesModelsFactory = new InterfaceModelsFactory(registry, propertiesModelsFactory);
+        const classesModelsFactory = new ClassModelsFactory(registry, propertiesModelsFactory);
+        Object.entries(schema).forEach(([modelName, modelSchema]) => {
+            typesModelsFactory.fromModelSchema(modelName, modelSchema);
+            interfacesModelsFactory.fromModelSchema(modelName, modelSchema);
+            classesModelsFactory.fromModelSchema(modelName, modelSchema);
         });
-        Object.entries(schema).forEach(([entityName, entityBody]) => compilationRegitry.registerEntity(entityName, entityBody));
-        return lines;
+        return outputLines;
     }
 
 }

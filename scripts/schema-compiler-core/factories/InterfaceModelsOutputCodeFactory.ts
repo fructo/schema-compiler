@@ -23,7 +23,7 @@ export class InterfaceModelsOutputCodeLinesFactory {
     private processModel(model: IRegistrableModel): void {
         if (model instanceof InterfaceModel) {
             const outputLines = this.createOutputCodeLines(model);
-            this.registry.registerOutputCodeLines(model.name, outputLines);
+            this.registry.registerOutputCodeLines(outputLines);
         }
     }
 

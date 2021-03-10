@@ -1,13 +1,11 @@
 'use strict';
 
-import { ISchema } from '../../schema-compiler-core/schema/ISchema.js';
-
 
 export class SchemaFileReader {
 
-    public async readSchema(filePath: string): Promise<ISchema> {
+    public async readSchema(filePath: string): Promise<Record<string, unknown>> {
         const jsonFileText = await Deno.readTextFile(filePath);
-        const schema = <ISchema>JSON.parse(jsonFileText);
+        const schema = <Record<string, unknown>>JSON.parse(jsonFileText);
         return schema;
     }
 
