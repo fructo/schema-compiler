@@ -1,5 +1,6 @@
 'use strict';
 
+import { InterfaceModel } from '../models/InterfaceModel.js';
 import {
     PropertyModel,
     TPropertyModelDictionarySchema,
@@ -40,11 +41,12 @@ export class PropertyModelsFactory {
      */
     public fromPropertyModelSchema(propertyName: string, propertySchema: TPropertyModelSchema): PropertyModel {
         if (TypeUtil.isDictionary(propertySchema)) {
-            return new PropertyModel({
-                name: propertyName,
-                type: Object.entries(propertySchema as TPropertyModelDictionarySchema)
+            const nestedPropertiesInterfaceModel = new InterfaceModel({
+                name: 'anonymous',
+                properties: Object.entries(propertySchema as TPropertyModelDictionarySchema)
                     .map(([name, schema]) => this.fromPropertyModelSchema(name, schema))
             });
+            return this.fromModel(propertyName, nestedPropertiesInterfaceModel);
         }
         if (TypeUtil.isString(propertySchema)) {
             return new PropertyModel({

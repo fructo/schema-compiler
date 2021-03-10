@@ -27,7 +27,7 @@ export type TPropertyModelDictionarySchema = {
 };
 
 
-export type TPropertyType = Array<PropertyModel> | BinaryExpressionTree<IRegistrableModel | ValueModel>;
+export type TPropertyType = BinaryExpressionTree<IRegistrableModel | ValueModel>;
 
 
 /**
@@ -41,7 +41,7 @@ export class PropertyModel {
     public readonly name: string;
 
     /**
-     * A binary expression tree or an array of properties.
+     * A binary expression tree.
      * The tree can contain language structure models, type models, value models.
      */
     public readonly type: TPropertyType;
@@ -63,9 +63,7 @@ export class PropertyModel {
     public clone(): PropertyModel {
         return new PropertyModel({
             name: this.name,
-            type: this.type instanceof BinaryExpressionTree
-                ? this.type.clone()
-                : this.type.map(property => property.clone())
+            type: this.type.clone()
         });
     }
 
