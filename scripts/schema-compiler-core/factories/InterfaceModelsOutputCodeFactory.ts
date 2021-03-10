@@ -4,7 +4,6 @@ import { InterfaceModel } from '../models/InterfaceModel.js';
 import { PropertyModel } from '../models/PropertyModel.js';
 import { CompilationRegistry } from '../registry/CompilationRegistry.js';
 import { IRegistrableModel } from '../registry/IRegistrableModel.js';
-import { BinaryExpressionTree } from '../utils/BinaryExpressionTree.js';
 
 
 export class InterfaceModelsOutputCodeLinesFactory {
@@ -39,14 +38,16 @@ export class InterfaceModelsOutputCodeLinesFactory {
     private createPropertiesOutputLines(properties: Array<PropertyModel>): Array<string> {
         return properties
             .map(propertyModel => {
-                return [
-                    ...propertyModel.type instanceof BinaryExpressionTree
-                        ? [`${propertyModel.name}: ${propertyModel.type.toString()};`]
-                        : [`${propertyModel.name}: {`,
-                        ...this.createPropertiesOutputLines(propertyModel.type),
-                            `};`
-                        ]
-                ];
+                const hasNestedProperties = propertyModel.type.toString() === 'anonymous';
+                if (hasNestedProperties) {
+                    const [nestedInterface] = propertyModel.type.toDisjunctiveArray((_,) => _) as [InterfaceModel];
+                    return [
+                        `${propertyModel.name}: {`,
+                        ...this.createPropertiesOutputLines(nestedInterface.properties),
+                        `};`
+                    ];
+                }
+                return [`${propertyModel.name}: ${propertyModel.type.toString()};`];
             })
             .flatMap(x => x);
     }
