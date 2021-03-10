@@ -22,13 +22,13 @@ test('dummy', t => {
                 "host": "TString | '127.0.0.1'",
                 "port": "TNumber | 42",
                 "uf": {
-                    "o": "TString | 10",
+                    "o": "TString | 10"
                 }
             }
         },
         "IMessage": {
             "properties": {
-                "header": "(TString | TString) & ISettings & TString"
+                "header": "(TString | TString) & TString"
             }
         },
         "IMessageSettingsLoad": {
