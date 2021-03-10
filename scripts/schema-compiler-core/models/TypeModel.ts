@@ -113,7 +113,7 @@ export class TypeModel implements IRegistrableModel {
      * @override
      */
     public toString(): string {
-        return this.name;
+        return this.type;
     }
 
     /**
