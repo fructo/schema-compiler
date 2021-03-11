@@ -38,13 +38,94 @@ export class ClassModelsOutputCodeLinesFactory {
                 const typeName = propertyModel.type.toString();
                 return [
                     `public static readonly ${propertyModel.name} = {`,
-                    `    create(value: ${typeName}): ${typeName} {`,
+                    `    create(`,
+                    ...this.createCreationMethodArgumentOutputLines(propertyModel),
+                    `    ): ${typeName} {`,
                     ...this.createCreationMethodOutputLines(typeName, propertyModel, ['value']),
                     `    }`,
                     `}`
                 ];
             })
             .flatMap(x => x);
+    }
+
+    private createCreationMethodArgumentOutputLines(propertyModel: PropertyModel): Array<string> {
+        const lines: Array<string> = [];
+        const disjunctiveArray = this.createDisjunctiveArray(propertyModel.type);
+        const isOptional = this.checkPropertiesForSelfSufficiency([propertyModel]);
+        const isOneLine = disjunctiveArray.every(element => element instanceof ValueModel || element instanceof TypeModel);
+        if (isOneLine) {
+            lines.push(...[
+                `value${isOptional ? '?' : ''}: ${propertyModel.type.toString()}`
+            ]);
+        } else {
+            const oneLine = disjunctiveArray
+                .filter(element => element instanceof ValueModel || element instanceof TypeModel)
+                .map(element => element.toString())
+                .join(' | ');
+            const [firstInterfaceLines, ...remainingInterfacesLines] = (disjunctiveArray
+                .filter(element => element instanceof InterfaceModel) as Array<InterfaceModel>)
+                .map(element => this.createCreationMethodArgumentInterfaceOuputLines(element));
+            lines.push(...this.injectInterfacesDisjunction([
+                [
+                    `value${isOptional ? '?' : ''}: ${oneLine}${oneLine ? ' | ' : ''}{`,
+                    ...firstInterfaceLines
+                ],
+                ...remainingInterfacesLines
+            ]));
+        }
+        return lines;
+    }
+
+    private injectInterfacesDisjunction(interfacesLines: Array<Array<string>>): Array<string> {
+        const lines: Array<string> = [];
+        for (let i = 0; i < interfacesLines.length; i++) {
+            lines.push(...interfacesLines[i]);
+            if (i === interfacesLines.length - 1) {
+                lines.push('}');
+            } else {
+                lines.push('} | {');
+            }
+        }
+        return lines;
+    }
+
+    private createCreationMethodArgumentInterfaceOuputLines(interfaceModel: InterfaceModel): Array<string> {
+        const lines: Array<string> = [];
+        const allProperties = this.collectDeepAncestorsProperties(interfaceModel);
+        allProperties.forEach(propertyModel => {
+            const disjunctiveArray = this.createDisjunctiveArray(propertyModel.type);
+            const isOptional = this.checkPropertiesForSelfSufficiency([propertyModel]);
+            const isOneLine = disjunctiveArray.every(element => element instanceof ValueModel || element instanceof TypeModel);
+            if (isOneLine) {
+                lines.push(...[
+                    `${propertyModel.name}${isOptional ? '?' : ''}: ${propertyModel.type.toString()};`
+                ]);
+            } else {
+                const oneLine = disjunctiveArray
+                    .filter(element => element instanceof ValueModel || element instanceof TypeModel)
+                    .map(element => element.toString())
+                    .join(' | ');
+                const [firstInterfaceLines, ...remainingInterfacesLines] = (disjunctiveArray
+                    .filter(element => element instanceof InterfaceModel) as Array<InterfaceModel>)
+                    .map(element => this.createCreationMethodArgumentInterfaceOuputLines(element));
+                lines.push(...this.injectInterfacesDisjunction([
+                    [
+                        `${propertyModel.name}${isOptional ? '?' : ''}: ${oneLine}${oneLine ? ' | ' : ''}{`,
+                        ...firstInterfaceLines
+                    ],
+                    ...remainingInterfacesLines
+                ]));
+            }
+        });
+        return lines;
+    }
+
+    private collectDeepAncestorsProperties(interfaceModel: InterfaceModel): Array<PropertyModel> {
+        const ancestorsProperties = interfaceModel.ancestors
+            .map(ancestor => this.collectDeepAncestorsProperties(ancestor))
+            .flatMap(x => x);
+        return this.filterUniqueProperties([...interfaceModel.properties, ...ancestorsProperties]);
     }
 
     /**
