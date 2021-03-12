@@ -196,7 +196,7 @@ export class ClassModelsOutputCodeLinesFactory {
                     `if (${rule}) {`,
                     `    const obj = { ...value };`,
                     ...this.createInterfaceModelOutputLines(interfaceModel, ['obj']),
-                    `    return obj;`,
+                    `    return obj as ${typeName};`,
                     `}`
                 ]);
             } else {
