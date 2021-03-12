@@ -42,6 +42,9 @@ export class ClassModelsOutputCodeLinesFactory {
                     ...this.createCreationMethodArgumentOutputLines(propertyModel),
                     `    ): ${typeName} {`,
                     ...this.createCreationMethodOutputLines(typeName, propertyModel, ['value']),
+                    `    },`,
+                    `    validate(value: unknown): Array<unknown> {`,
+                    ...this.createValidationMethodOutputLines(propertyModel, ['value']),
                     `    }`,
                     `}`
                 ];
@@ -435,6 +438,42 @@ export class ClassModelsOutputCodeLinesFactory {
                 ]);
             }
         });
+        return lines;
+    }
+
+    private createValidationMethodOutputLines(propertyModel: PropertyModel, pathStack: Array<string>): Array<string> {
+        const lines: Array<string> = [];
+        if (pathStack.length === 1) {
+            lines.push('const errors: Array<unknown> = [];');
+        }
+        const disjunctiveArray = this.createDisjunctiveArray(propertyModel.type);
+        const propertyPath = pathStack.reduce((acc, val) => `(${acc} as { ${val}: unknown }).${val}`);
+        const errors: Array<string> = [];
+        disjunctiveArray.forEach(element => {
+            if (element instanceof InterfaceModel) {
+                lines.push(...[
+                    `if (typeof ${propertyPath} === 'object' && ${propertyPath} && (${propertyPath} as { constructor: { name: string } }).constructor.name === 'Object') {`
+                ]);
+                element.properties.forEach(interfaceProperty => {
+                    lines.push(...this.createValidationMethodOutputLines(interfaceProperty, [...pathStack, interfaceProperty.name]));
+                });
+                lines.push('} else {');
+                errors.push(`{ description: 'is_object' }`);
+            }
+            if (element instanceof ValueModel) {
+                lines.push(`if (${propertyPath} !== ${element.toString()}) {`);
+                errors.push(`{ description: 'value_mismatch' }`);
+            }
+            if (element instanceof TypeModel) {
+                lines.push(`if (!(${element.rule.replaceAll('value', propertyPath)})) {`);
+                errors.push(`{ description: '${element.description}' }`);
+            }
+        });
+        errors.forEach(error => lines.push(`errors.push(${error});`));
+        disjunctiveArray.forEach(() => lines.push('}'));
+        if (pathStack.length === 1) {
+            lines.push('return errors;');
+        }
         return lines;
     }
 
