@@ -7,6 +7,7 @@ import { TypeModelsFactory } from './factories/TypeModelsFactory.js';
 import { PropertyModelsFactory } from './factories/PropertyModelsFactory.js';
 import { InterfaceModelsFactory } from './factories/InterfaceModelsFactory.js';
 import { ClassModelsFactory } from './factories/ClassModelsFactory.js';
+import { MixModelsFactory } from './factories/MixModelsFactory.js';
 import { InterfaceModelsOutputCodeLinesFactory } from './factories/InterfaceModelsOutputCodeFactory.js';
 import { ClassModelsOutputCodeLinesFactory } from './factories/ClassModelsOutputCodeLinesFactory.js';
 
@@ -25,10 +26,12 @@ export class SchemaCompilerCore {
         const propertiesModelsFactory = new PropertyModelsFactory(registry);
         const interfacesModelsFactory = new InterfaceModelsFactory(registry, propertiesModelsFactory);
         const classesModelsFactory = new ClassModelsFactory(registry, propertiesModelsFactory);
+        const mixModelsFactory = new MixModelsFactory(interfacesModelsFactory, classesModelsFactory);
         Object.entries(schema).forEach(([modelName, modelSchema]) => {
             typesModelsFactory.fromModelSchema(modelName, modelSchema);
             interfacesModelsFactory.fromModelSchema(modelName, modelSchema);
             classesModelsFactory.fromModelSchema(modelName, modelSchema);
+            mixModelsFactory.fromModelSchema(modelName, modelSchema);
         });
         return outputLines;
     }
